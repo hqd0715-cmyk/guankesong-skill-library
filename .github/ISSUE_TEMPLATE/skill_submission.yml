@@ -1,0 +1,93 @@
+name: Skill 投稿
+description: 提交一个新的 Skill，系统会自动生成 Draft PR 供内部成员审核。
+title: "[Skill] "
+labels:
+  - skill-submission
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢投稿。请尽量写清楚适用场景、操作步骤和可复制的 Prompt，这会让内部审核更快。
+  - type: input
+    id: skill_title
+    attributes:
+      label: Skill 标题
+      description: 例如：用 AI 快速生成活动复盘
+      placeholder: 用 AI 快速生成活动复盘
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: 分类
+      options:
+        - AI Shock
+        - AI + 专业方法论
+        - 整活 Skill
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: 作者
+      placeholder: 韩启东
+    validations:
+      required: true
+  - type: input
+    id: github
+    attributes:
+      label: GitHub 用户名
+      placeholder: hqd0715
+    validations:
+      required: false
+  - type: input
+    id: tags
+    attributes:
+      label: 标签
+      description: 用逗号分隔，例如：活动复盘, ChatGPT, 效率工具
+      placeholder: 活动复盘, ChatGPT, 效率工具
+    validations:
+      required: true
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: 难度
+      options:
+        - beginner
+        - intermediate
+        - advanced
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 适用场景
+      description: 写清楚什么时候适合使用这个 Skill。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 使用步骤
+      description: 建议用有序列表写出操作步骤。
+    validations:
+      required: true
+  - type: textarea
+    id: prompt
+    attributes:
+      label: Prompt 示例
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: 注意事项
+    validations:
+      required: false
+  - type: textarea
+    id: example
+    attributes:
+      label: 案例
+    validations:
+      required: false

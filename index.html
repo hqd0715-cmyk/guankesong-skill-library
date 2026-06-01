@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>莞客松 Skill 共创库</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #202124;
+        --muted: #5f6368;
+        --line: #dadce0;
+        --paper: #ffffff;
+        --band: #f7f8fa;
+        --accent: #0b57d0;
+        --accent-soft: #e8f0fe;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        background: var(--band);
+      }
+
+      .wrap {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .hero {
+        padding: 48px 0 28px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(32px, 6vw, 56px);
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        max-width: 760px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        padding: 22px 0;
+        align-items: center;
+      }
+
+      input,
+      select {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0 12px;
+        font: inherit;
+        background: #fff;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+        padding: 10px 0 48px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        min-height: 170px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.35;
+      }
+
+      .meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .pill {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-radius: 999px;
+        padding: 3px 9px;
+      }
+
+      .card a {
+        margin-top: auto;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .empty {
+        color: var(--muted);
+        padding: 40px 0;
+      }
+
+      @media (max-width: 640px) {
+        .toolbar {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap hero">
+        <h1>莞客松 Skill 共创库</h1>
+        <p class="subtitle">收集 AI Shock、AI + 专业方法论和整活 Skill，通过 Issue 投稿、PR 审核和索引检索持续沉淀。</p>
+      </div>
+    </header>
+    <main class="wrap">
+      <section class="toolbar" aria-label="筛选 Skill">
+        <input id="search" type="search" placeholder="搜索标题、作者或路径" />
+        <select id="category">
+          <option value="">全部分类</option>
+          <option>AI Shock</option>
+          <option>AI + 专业方法论</option>
+          <option>整活 Skill</option>
+        </select>
+      </section>
+      <section id="skills" class="grid" aria-live="polite"></section>
+    </main>
+    <script>
+      const state = { skills: [], search: "", category: "" };
+      const skillsEl = document.querySelector("#skills");
+      const searchEl = document.querySelector("#search");
+      const categoryEl = document.querySelector("#category");
+
+      function render() {
+        const q = state.search.trim().toLowerCase();
+        const filtered = state.skills.filter((skill) => {
+          const text = [skill.title, skill.author, skill.path].join(" ").toLowerCase();
+          return (!q || text.includes(q)) && (!state.category || skill.category === state.category);
+        });
+
+        if (!filtered.length) {
+          skillsEl.className = "empty";
+          skillsEl.textContent = state.skills.length ? "没有匹配的 Skill。" : "还没有已合并的 Skill。";
+          return;
+        }
+
+        skillsEl.className = "grid";
+        skillsEl.innerHTML = filtered
+          .map(
+            (skill) => `
+              <article class="card">
+                <h2>${escapeHtml(skill.title)}</h2>
+                <div class="meta">
+                  <span class="pill">${escapeHtml(skill.category || "未分类")}</span>
+                  <span>${escapeHtml(skill.difficulty || "beginner")}</span>
+                  <span>${escapeHtml(skill.status || "draft")}</span>
+                </div>
+                <div class="meta">${escapeHtml(skill.author || "未知作者")}</div>
+                <a href="${encodeURI(skill.path)}">查看文件</a>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char]);
+      }
+
+      searchEl.addEventListener("input", (event) => {
+        state.search = event.target.value;
+        render();
+      });
+
+      categoryEl.addEventListener("change", (event) => {
+        state.category = event.target.value;
+        render();
+      });
+
+      fetch("index/skills.json")
+        .then((response) => response.json())
+        .then((skills) => {
+          state.skills = Array.isArray(skills) ? skills : [];
+          render();
+        })
+        .catch(() => {
+          state.skills = [];
+          render();
+        });
+    </script>
+  </body>
+</html>
