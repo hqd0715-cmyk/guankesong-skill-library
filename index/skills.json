@@ -1,5 +1,13 @@
 [
   {
+    "title": "1",
+    "category": "AI + 专业方法论",
+    "author": "1",
+    "difficulty": "beginner",
+    "status": "draft",
+    "path": "skills/ai-professional/1.md"
+  },
+  {
     "title": "机构介绍的文本润色",
     "category": "AI Shock",
     "author": "朱献泽",
