@@ -88,7 +88,7 @@ jobs:
 
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
           git commit -m "Add skill from issue #${{ steps.issue.outputs.number }}"
-          git push --force-with-lease origin "$branch"
+          git push --force origin "$branch"
           git ls-remote --heads origin "$branch"
 
       - name: Create draft PR
@@ -97,6 +97,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.skill_branch.outputs.branch }}
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
         shell: bash
         run: |
           set -euo pipefail
@@ -108,10 +109,11 @@ jobs:
 
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Base: main"
-          echo "Head: ${BRANCH}"
-          gh pr list --base main --head "$BRANCH" --state open --json url --jq '.[0].url // ""'
+          echo "Head: ${REPOSITORY_OWNER}:${BRANCH}"
+          gh --version
+          gh pr list --base main --head "${REPOSITORY_OWNER}:${BRANCH}" --state open --json url --jq '.[0].url // ""'
 
-          existing_url="$(gh pr list --base main --head "$BRANCH" --state open --json url --jq '.[0].url // ""')"
+          existing_url="$(gh pr list --base main --head "${REPOSITORY_OWNER}:${BRANCH}" --state open --json url --jq '.[0].url // ""')"
           if [ -n "$existing_url" ]; then
             echo "Draft PR already exists: $existing_url"
             exit 0
@@ -120,6 +122,6 @@ jobs:
           gh pr create \
             --draft \
             --base main \
-            --head "$BRANCH" \
+            --head "${REPOSITORY_OWNER}:${BRANCH}" \
             --title "$title" \
             --body "$body"
