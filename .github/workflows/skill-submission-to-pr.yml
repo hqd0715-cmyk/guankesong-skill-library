@@ -112,6 +112,7 @@ jobs:
           script: |
             const branch = '${{ steps.skill_branch.outputs.branch }}';
             const issueNumber = Number('${{ steps.issue.outputs.number }}');
+            const head = `${context.repo.owner}:${branch}`;
             const title = `Add skill from issue #${issueNumber}`;
             const body = [
               `This draft PR was generated from issue #${issueNumber}.`,
@@ -119,11 +120,12 @@ jobs:
               'Internal reviewers should verify classification, quality, originality, and formatting before marking it ready.'
             ].join('\n');
 
+            core.info(`Looking for an open PR from ${head} to main.`);
             const existing = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              head: `${context.repo.owner}:${branch}`,
+              head,
               base: 'main'
             });
 
@@ -133,25 +135,11 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   title,
-                  head: branch,
+                  head,
                   base: 'main',
                   body,
                   draft: true,
                   maintainer_can_modify: true
                 })).data;
-
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.number,
-              labels: ['skill-review']
-            });
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: `Draft PR created: ${pr.html_url}`
-            });
 
             core.notice(`Draft PR ready: ${pr.html_url}`);
