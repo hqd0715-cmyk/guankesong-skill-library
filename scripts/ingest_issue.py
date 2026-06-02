@@ -147,7 +147,7 @@ def rebuild_index(root: Path) -> None:
                 "author": meta.get("author", ""),
                 "difficulty": meta.get("difficulty", ""),
                 "status": meta.get("status", ""),
-                "path": path.as_posix(),
+                "path": path.relative_to(root).as_posix(),
             }
         )
 

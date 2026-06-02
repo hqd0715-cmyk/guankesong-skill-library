@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   create-skill-pr:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.issue.labels.*.name, 'skill-submission')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[Skill]') || contains(github.event.issue.labels.*.name, 'skill-submission')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
