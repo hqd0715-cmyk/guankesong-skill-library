@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "title": "测试投稿：用 AI 生成每日工作简报",
+    "category": "AI Shock",
+    "author": "测试用户",
+    "difficulty": "beginner",
+    "status": "draft",
+    "path": "skills/ai-shock/测试投稿-用-ai-生成每日工作简报.md"
+  }
+]
