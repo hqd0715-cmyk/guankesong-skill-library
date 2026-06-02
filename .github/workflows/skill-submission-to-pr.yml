@@ -104,42 +104,37 @@ jobs:
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
           git commit -m "Add skill from issue #${{ steps.issue.outputs.number }}"
           git push --force-with-lease origin "$branch"
+          git ls-remote --heads origin "$branch"
 
       - name: Create draft PR
         if: steps.skill_branch.outputs.has_changes == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const branch = '${{ steps.skill_branch.outputs.branch }}';
-            const issueNumber = Number('${{ steps.issue.outputs.number }}');
-            const head = `${context.repo.owner}:${branch}`;
-            const title = `Add skill from issue #${issueNumber}`;
-            const body = [
-              `This draft PR was generated from issue #${issueNumber}.`,
-              '',
-              'Internal reviewers should verify classification, quality, originality, and formatting before marking it ready.'
-            ].join('\n');
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.skill_branch.outputs.branch }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
 
-            core.info(`Looking for an open PR from ${head} to main.`);
-            const existing = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head,
-              base: 'main'
-            });
+          title="Add skill from issue #${ISSUE_NUMBER}"
+          body="This draft PR was generated from issue #${ISSUE_NUMBER}.
 
-            const pr = existing.data.length
-              ? existing.data[0]
-              : (await github.rest.pulls.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  title,
-                  head,
-                  base: 'main',
-                  body,
-                  draft: true,
-                  maintainer_can_modify: true
-                })).data;
+          Internal reviewers should verify classification, quality, originality, and formatting before marking it ready."
 
-            core.notice(`Draft PR ready: ${pr.html_url}`);
+          echo "Repository: ${GITHUB_REPOSITORY}"
+          echo "Base: main"
+          echo "Head: ${BRANCH}"
+          gh pr list --base main --head "$BRANCH" --state open --json url --jq '.[0].url // ""'
+
+          existing_url="$(gh pr list --base main --head "$BRANCH" --state open --json url --jq '.[0].url // ""')"
+          if [ -n "$existing_url" ]; then
+            echo "Draft PR already exists: $existing_url"
+            exit 0
+          fi
+
+          gh pr create \
+            --draft \
+            --base main \
+            --head "$BRANCH" \
+            --title "$title" \
+            --body "$body"
