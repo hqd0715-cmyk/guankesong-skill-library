@@ -81,16 +81,77 @@ jobs:
               }
             }
 
-      - name: Create draft PR
-        uses: peter-evans/create-pull-request@v8
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: skill-submission/issue-${{ steps.issue.outputs.number }}
-          commit-message: "Add skill from issue #${{ steps.issue.outputs.number }}"
-          title: "Add skill from issue #${{ steps.issue.outputs.number }}"
-          body: |
-            This draft PR was generated from issue #${{ steps.issue.outputs.number }}.
+      - name: Commit and push skill branch
+        id: skill_branch
+        shell: bash
+        run: |
+          set -euo pipefail
 
-            Internal reviewers should verify classification, quality, originality, and formatting before marking it ready.
-          draft: true
-          labels: skill-review
+          branch="skill-submission/issue-${{ steps.issue.outputs.number }}"
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add skills index
+
+          if git diff --cached --quiet; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No generated skill changes detected."
+            exit 0
+          fi
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          git commit -m "Add skill from issue #${{ steps.issue.outputs.number }}"
+          git push --force-with-lease origin "$branch"
+
+      - name: Create draft PR
+        if: steps.skill_branch.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = '${{ steps.skill_branch.outputs.branch }}';
+            const issueNumber = Number('${{ steps.issue.outputs.number }}');
+            const title = `Add skill from issue #${issueNumber}`;
+            const body = [
+              `This draft PR was generated from issue #${issueNumber}.`,
+              '',
+              'Internal reviewers should verify classification, quality, originality, and formatting before marking it ready.'
+            ].join('\n');
+
+            const existing = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${branch}`,
+              base: 'main'
+            });
+
+            const pr = existing.data.length
+              ? existing.data[0]
+              : (await github.rest.pulls.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title,
+                  head: branch,
+                  base: 'main',
+                  body,
+                  draft: true,
+                  maintainer_can_modify: true
+                })).data;
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['skill-review']
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `Draft PR created: ${pr.html_url}`
+            });
+
+            core.notice(`Draft PR ready: ${pr.html_url}`);
