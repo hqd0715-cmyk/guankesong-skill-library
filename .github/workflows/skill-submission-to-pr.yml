@@ -50,8 +50,39 @@ jobs:
             --issue-title "${{ steps.issue.outputs.title }}" \
             --issue-body-file issue-body.md
 
+      - name: Show generated changes
+        run: |
+          git status --short
+          git diff --stat
+
+      - name: Ensure labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'skill-submission', color: '0E8A16', description: 'Skill contribution issue' },
+              { name: 'skill-review', color: '1D76DB', description: 'Generated skill PR awaiting review' }
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label
+                });
+              }
+            }
+
       - name: Create draft PR
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: skill-submission/issue-${{ steps.issue.outputs.number }}
