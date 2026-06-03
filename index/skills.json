@@ -1,18 +1,71 @@
 [
   {
+    "name": "1",
     "title": "1",
+    "description": "历史 Issue #4 生成的 AI + 专业方法论草稿。用于保留原投稿内容，等待作者或审核者补齐真实标题、场景、步骤和 Prompt。",
     "category": "AI + 专业方法论",
     "author": "1",
+    "github": "",
+    "tags": [
+      "1"
+    ],
     "difficulty": "beginner",
     "status": "draft",
-    "path": "skills/ai-professional/1.md"
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/1/SKILL.md",
+    "metadata_path": "skills/1/skill.json"
   },
   {
+    "name": "government-institution-text-polish",
     "title": "机构介绍的文本润色",
+    "description": "机构介绍、单位简介、部门职能、公文类文本润色工作流。Use when the user asks to rewrite Chinese institutional, government, public-sector, or official-document copy so it sounds precise, grounded, and less AI-generated.",
     "category": "AI Shock",
     "author": "朱献泽",
+    "github": "",
+    "tags": [
+      "claude-code-skill",
+      "chinese-text",
+      "government-writing",
+      "bureaucratic-writing",
+      "ai-text-humanizer",
+      "content-rewriting",
+      "institution-text",
+      "official-documents",
+      "writing-assistant",
+      "ai-workflow"
+    ],
     "difficulty": "beginner",
     "status": "draft",
-    "path": "skills/ai-shock/机构介绍的文本润色.md"
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/government-institution-text-polish/SKILL.md",
+    "metadata_path": "skills/government-institution-text-polish/skill.json"
+  },
+  {
+    "name": "submit-skills",
+    "title": "投稿 Skills",
+    "description": "整理当前文件夹中的标准 Agent Skills，并把它们提交到莞客松 Skill 共创库的审核分支。Use when the user asks to submit, contribute, publish, push, or organize local Codex or Claude Code skills for review in this GitHub skill library.",
+    "category": "库维护工具",
+    "author": "莞客松 Skill 共创库",
+    "github": "hqd0715-cmyk",
+    "tags": [
+      "skill-submission",
+      "github",
+      "agent-skill",
+      "automation"
+    ],
+    "difficulty": "intermediate",
+    "status": "reviewed",
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/submit-skills/SKILL.md",
+    "metadata_path": "skills/submit-skills/skill.json"
   }
 ]

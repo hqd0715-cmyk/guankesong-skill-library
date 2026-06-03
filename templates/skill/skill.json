@@ -1,0 +1,16 @@
+{
+  "name": "your-skill-name",
+  "title": "Skill 标题",
+  "category": "AI Shock",
+  "author": "",
+  "github": "",
+  "tags": [],
+  "status": "draft",
+  "created": "YYYY-MM-DD",
+  "updated": "YYYY-MM-DD",
+  "difficulty": "beginner",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "1",
+  "title": "1",
+  "category": "AI + 专业方法论",
+  "author": "1",
+  "github": "",
+  "tags": [
+    "1"
+  ],
+  "status": "draft",
+  "created": "2026-06-02",
+  "updated": "2026-06-02",
+  "difficulty": "beginner",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "source_issue": 4
+}

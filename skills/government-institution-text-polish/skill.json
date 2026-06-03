@@ -1,0 +1,28 @@
+{
+  "name": "government-institution-text-polish",
+  "title": "机构介绍的文本润色",
+  "category": "AI Shock",
+  "author": "朱献泽",
+  "github": "",
+  "tags": [
+    "claude-code-skill",
+    "chinese-text",
+    "government-writing",
+    "bureaucratic-writing",
+    "ai-text-humanizer",
+    "content-rewriting",
+    "institution-text",
+    "official-documents",
+    "writing-assistant",
+    "ai-workflow"
+  ],
+  "status": "draft",
+  "created": "2026-06-02",
+  "updated": "2026-06-02",
+  "difficulty": "beginner",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "source_issue": 2
+}

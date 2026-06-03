@@ -39,18 +39,18 @@
       }
 
       .hero {
-        padding: 48px 0 28px;
+        padding: 42px 0 24px;
       }
 
       h1 {
         margin: 0 0 12px;
-        font-size: clamp(32px, 6vw, 56px);
+        font-size: clamp(32px, 6vw, 54px);
         line-height: 1.1;
         letter-spacing: 0;
       }
 
       .subtitle {
-        max-width: 760px;
+        max-width: 820px;
         margin: 0;
         color: var(--muted);
         font-size: 18px;
@@ -58,7 +58,7 @@
 
       .toolbar {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
         gap: 12px;
         padding: 22px 0;
         align-items: center;
@@ -76,7 +76,7 @@
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 14px;
         padding: 10px 0 48px;
       }
@@ -85,7 +85,7 @@
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 16px;
-        min-height: 170px;
+        min-height: 220px;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -95,6 +95,12 @@
         margin: 0;
         font-size: 18px;
         line-height: 1.35;
+      }
+
+      .description {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
       }
 
       .meta {
@@ -135,17 +141,14 @@
     <header>
       <div class="wrap hero">
         <h1>莞客松 Skill 共创库</h1>
-        <p class="subtitle">收集 AI Shock、AI + 专业方法论和整活 Skill，通过 Issue 投稿、PR 审核和索引检索持续沉淀。</p>
+        <p class="subtitle">收集兼容 Codex 和 Claude Code 的 Agent Skill 包，通过 Issue 投稿、本地投稿脚本、Draft PR 审核和索引检索持续沉淀。</p>
       </div>
     </header>
     <main class="wrap">
       <section class="toolbar" aria-label="筛选 Skill">
-        <input id="search" type="search" placeholder="搜索标题、作者或路径" />
+        <input id="search" type="search" placeholder="搜索标题、描述、作者、标签或路径" />
         <select id="category">
           <option value="">全部分类</option>
-          <option>AI Shock</option>
-          <option>AI + 专业方法论</option>
-          <option>整活 Skill</option>
         </select>
       </section>
       <section id="skills" class="grid" aria-live="polite"></section>
@@ -156,10 +159,26 @@
       const searchEl = document.querySelector("#search");
       const categoryEl = document.querySelector("#category");
 
+      function renderCategories() {
+        const categories = [...new Set(state.skills.map((skill) => skill.category).filter(Boolean))].sort();
+        categoryEl.innerHTML = '<option value="">全部分类</option>' + categories
+          .map((category) => `<option>${escapeHtml(category)}</option>`)
+          .join("");
+      }
+
       function render() {
         const q = state.search.trim().toLowerCase();
         const filtered = state.skills.filter((skill) => {
-          const text = [skill.title, skill.author, skill.path].join(" ").toLowerCase();
+          const text = [
+            skill.name,
+            skill.title,
+            skill.description,
+            skill.author,
+            Array.isArray(skill.tags) ? skill.tags.join(" ") : "",
+            skill.path,
+          ]
+            .join(" ")
+            .toLowerCase();
           return (!q || text.includes(q)) && (!state.category || skill.category === state.category);
         });
 
@@ -174,14 +193,16 @@
           .map(
             (skill) => `
               <article class="card">
-                <h2>${escapeHtml(skill.title)}</h2>
+                <h2>${escapeHtml(skill.title || skill.name)}</h2>
                 <div class="meta">
                   <span class="pill">${escapeHtml(skill.category || "未分类")}</span>
                   <span>${escapeHtml(skill.difficulty || "beginner")}</span>
                   <span>${escapeHtml(skill.status || "draft")}</span>
                 </div>
+                <p class="description">${escapeHtml(skill.description || "")}</p>
+                <div class="meta">${escapeHtml(platformText(skill.platforms))}</div>
                 <div class="meta">${escapeHtml(skill.author || "未知作者")}</div>
-                <a href="${encodeURI(skill.path)}">查看文件</a>
+                <a href="${encodeURI(skill.path)}">查看 SKILL.md</a>
               </article>
             `
           )
@@ -198,6 +219,11 @@
         })[char]);
       }
 
+      function platformText(platforms) {
+        if (!Array.isArray(platforms) || !platforms.length) return "平台未标注";
+        return platforms.join(" / ");
+      }
+
       searchEl.addEventListener("input", (event) => {
         state.search = event.target.value;
         render();
@@ -212,6 +238,7 @@
         .then((response) => response.json())
         .then((skills) => {
           state.skills = Array.isArray(skills) ? skills : [];
+          renderCategories();
           render();
         })
         .catch(() => {
