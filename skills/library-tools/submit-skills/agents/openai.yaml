@@ -1,0 +1,4 @@
+interface:
+  display_name: "投稿 Skills"
+  short_description: "整理本地 Agent Skills 并提交到共创库审核分支等待维护者审核"
+  default_prompt: "整理当前文件夹中的 skills，并提交到莞客松 Skill 共创库等待审核。"

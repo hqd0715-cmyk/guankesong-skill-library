@@ -1,0 +1,21 @@
+{
+  "name": "submit-skills",
+  "title": "投稿 Skills",
+  "category": "库维护工具",
+  "author": "莞客松 Skill 共创库",
+  "github": "hqd0715-cmyk",
+  "tags": [
+    "skill-submission",
+    "github",
+    "agent-skill",
+    "automation"
+  ],
+  "status": "reviewed",
+  "created": "2026-06-03",
+  "updated": "2026-06-03",
+  "difficulty": "intermediate",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ]
+}

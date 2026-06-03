@@ -1,5 +1,5 @@
 name: Skill 投稿
-description: 提交一个新的 Skill，系统会自动生成 Draft PR 供内部成员审核。
+description: 提交一个兼容 Codex 和 Claude Code 的 Agent Skill，系统会自动生成 Draft PR 供内部成员审核。
 title: "[Skill] "
 labels:
   - skill-submission
@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        感谢投稿。请尽量写清楚适用场景、操作步骤和可复制的 Prompt，这会让内部审核更快。
+        感谢投稿。请尽量写清楚适用场景、操作步骤和可复制的 Prompt。系统会把内容整理成兼容 Codex 和 Claude Code 的 Agent Skill 包。
   - type: input
     id: skill_title
     attributes:
@@ -16,6 +16,14 @@ body:
       placeholder: 用 AI 快速生成活动复盘
     validations:
       required: true
+  - type: input
+    id: skill_name
+    attributes:
+      label: Skill 英文 ID
+      description: 可选。用小写字母、数字和连字符，例如：event-retrospective。不要包含 anthropic 或 claude。留空时系统会根据标题和标签生成。
+      placeholder: event-retrospective
+    validations:
+      required: false
   - type: dropdown
     id: category
     attributes:

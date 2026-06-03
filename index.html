@@ -39,18 +39,18 @@
       }
 
       .hero {
-        padding: 48px 0 28px;
+        padding: 42px 0 24px;
       }
 
       h1 {
         margin: 0 0 12px;
-        font-size: clamp(32px, 6vw, 56px);
+        font-size: clamp(32px, 6vw, 54px);
         line-height: 1.1;
         letter-spacing: 0;
       }
 
       .subtitle {
-        max-width: 760px;
+        max-width: 820px;
         margin: 0;
         color: var(--muted);
         font-size: 18px;
@@ -58,7 +58,7 @@
 
       .toolbar {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
         gap: 12px;
         padding: 22px 0;
         align-items: center;
@@ -76,7 +76,7 @@
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 14px;
         padding: 10px 0 48px;
       }
@@ -85,7 +85,7 @@
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 16px;
-        min-height: 170px;
+        min-height: 220px;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -95,6 +95,12 @@
         margin: 0;
         font-size: 18px;
         line-height: 1.35;
+      }
+
+      .description {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
       }
 
       .meta {
@@ -135,31 +141,51 @@
     <header>
       <div class="wrap hero">
         <h1>莞客松 Skill 共创库</h1>
-        <p class="subtitle">收集 AI Shock、AI + 专业方法论和整活 Skill，通过 Issue 投稿、PR 审核和索引检索持续沉淀。</p>
+        <p class="subtitle">收集兼容 Codex 和 Claude Code 的 Agent Skill 包，通过 Issue 投稿、本地投稿脚本、Draft PR 审核和索引检索持续沉淀。</p>
       </div>
     </header>
     <main class="wrap">
       <section class="toolbar" aria-label="筛选 Skill">
-        <input id="search" type="search" placeholder="搜索标题、作者或路径" />
+        <input id="search" type="search" placeholder="搜索标题、描述、作者、标签或路径" />
         <select id="category">
           <option value="">全部分类</option>
-          <option>AI Shock</option>
-          <option>AI + 专业方法论</option>
-          <option>整活 Skill</option>
         </select>
       </section>
       <section id="skills" class="grid" aria-live="polite"></section>
     </main>
     <script>
+      const REPOSITORY = "hqd0715-cmyk/guankesong-skill-library";
+      const CATEGORY_LABELS = {
+        "ai-shock": "AI Shock",
+        "ai-professional": "AI + 专业方法论",
+        "fun-skills": "整活 Skill",
+        "library-tools": "库维护工具",
+      };
       const state = { skills: [], search: "", category: "" };
       const skillsEl = document.querySelector("#skills");
       const searchEl = document.querySelector("#search");
       const categoryEl = document.querySelector("#category");
 
+      function renderCategories() {
+        const categories = [...new Set(state.skills.map((skill) => skill.category).filter(Boolean))].sort();
+        categoryEl.innerHTML = '<option value="">全部分类</option>' + categories
+          .map((category) => `<option>${escapeHtml(category)}</option>`)
+          .join("");
+      }
+
       function render() {
         const q = state.search.trim().toLowerCase();
         const filtered = state.skills.filter((skill) => {
-          const text = [skill.title, skill.author, skill.path].join(" ").toLowerCase();
+          const text = [
+            skill.name,
+            skill.title,
+            skill.description,
+            skill.author,
+            Array.isArray(skill.tags) ? skill.tags.join(" ") : "",
+            skill.path,
+          ]
+            .join(" ")
+            .toLowerCase();
           return (!q || text.includes(q)) && (!state.category || skill.category === state.category);
         });
 
@@ -174,14 +200,16 @@
           .map(
             (skill) => `
               <article class="card">
-                <h2>${escapeHtml(skill.title)}</h2>
+                <h2>${escapeHtml(skill.title || skill.name)}</h2>
                 <div class="meta">
                   <span class="pill">${escapeHtml(skill.category || "未分类")}</span>
                   <span>${escapeHtml(skill.difficulty || "beginner")}</span>
                   <span>${escapeHtml(skill.status || "draft")}</span>
                 </div>
+                <p class="description">${escapeHtml(skill.description || "")}</p>
+                <div class="meta">${escapeHtml(platformText(skill.platforms))}</div>
                 <div class="meta">${escapeHtml(skill.author || "未知作者")}</div>
-                <a href="${encodeURI(skill.path)}">查看文件</a>
+                <a href="${encodeURI(skill.path)}">查看 SKILL.md</a>
               </article>
             `
           )
@@ -198,6 +226,98 @@
         })[char]);
       }
 
+      function platformText(platforms) {
+        if (!Array.isArray(platforms) || !platforms.length) return "平台未标注";
+        return platforms.join(" / ");
+      }
+
+      function currentRef() {
+        return new URLSearchParams(window.location.search).get("ref") || "main";
+      }
+
+      async function fetchJson(url) {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return response.json();
+      }
+
+      async function fetchText(url) {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return response.text();
+      }
+
+      function parseFrontmatter(markdown) {
+        if (!markdown.startsWith("---\n")) return {};
+        const end = markdown.indexOf("\n---", 4);
+        if (end < 0) return {};
+        return markdown
+          .slice(4, end)
+          .split("\n")
+          .reduce((data, line) => {
+            const index = line.indexOf(":");
+            if (index < 0) return data;
+            const key = line.slice(0, index).trim();
+            const raw = line.slice(index + 1).trim();
+            data[key] = raw.replace(/^["']|["']$/g, "");
+            return data;
+          }, {});
+      }
+
+      function firstHeading(markdown, fallback) {
+        const heading = markdown.split("\n").find((line) => line.startsWith("# "));
+        return heading ? heading.slice(2).trim() : fallback;
+      }
+
+      async function loadSkillsFromRepository() {
+        const ref = currentRef();
+        const treeUrl = `https://api.github.com/repos/${REPOSITORY}/git/trees/${encodeURIComponent(ref)}?recursive=1`;
+        const tree = await fetchJson(treeUrl);
+        const skillFiles = (tree.tree || [])
+          .filter((item) => item.type === "blob" && /^skills\/[^/]+\/[^/]+\/SKILL\.md$/.test(item.path))
+          .sort((a, b) => a.path.localeCompare(b.path));
+
+        return Promise.all(skillFiles.map(async (item) => {
+          const parts = item.path.split("/");
+          const categoryDir = parts[1];
+          const name = parts[2];
+          const rawBase = `https://raw.githubusercontent.com/${REPOSITORY}/${encodeURIComponent(ref)}/skills/${categoryDir}/${name}`;
+          const [markdown, metadata] = await Promise.all([
+            fetchText(`${rawBase}/SKILL.md`),
+            fetchJson(`${rawBase}/skill.json`).catch(() => ({})),
+          ]);
+          const frontmatter = parseFrontmatter(markdown);
+          return {
+            name: frontmatter.name || metadata.name || name,
+            title: metadata.title || firstHeading(markdown, name),
+            description: frontmatter.description || "",
+            category: metadata.category || CATEGORY_LABELS[categoryDir] || "",
+            author: metadata.author || "",
+            github: metadata.github || "",
+            tags: Array.isArray(metadata.tags) ? metadata.tags : [],
+            difficulty: metadata.difficulty || "",
+            status: metadata.status || "",
+            platforms: Array.isArray(metadata.platforms) ? metadata.platforms : [],
+            path: item.path,
+            metadata_path: `skills/${categoryDir}/${name}/skill.json`,
+          };
+        }));
+      }
+
+      async function loadSkillsFromIndex() {
+        const skills = await fetchJson(`index/skills.json?v=${Date.now()}`);
+        return Array.isArray(skills) ? skills : [];
+      }
+
+      async function loadSkills() {
+        try {
+          return await loadSkillsFromRepository();
+        } catch (error) {
+          console.warn("Falling back to index/skills.json", error);
+          return loadSkillsFromIndex();
+        }
+      }
+
       searchEl.addEventListener("input", (event) => {
         state.search = event.target.value;
         render();
@@ -208,10 +328,10 @@
         render();
       });
 
-      fetch("index/skills.json")
-        .then((response) => response.json())
+      loadSkills()
         .then((skills) => {
-          state.skills = Array.isArray(skills) ? skills : [];
+          state.skills = skills;
+          renderCategories();
           render();
         })
         .catch(() => {

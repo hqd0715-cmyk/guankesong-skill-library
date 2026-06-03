@@ -61,6 +61,10 @@ jobs:
             --issue-title "${{ steps.issue.outputs.title }}" \
             --issue-body-file issue-body.md
 
+      - name: Validate skill packages
+        run: |
+          python scripts/validate_skills.py
+
       - name: Show generated changes
         run: |
           git status --short
@@ -87,7 +91,8 @@ jobs:
           fi
 
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          git commit -m "Add skill from issue #${{ steps.issue.outputs.number }}"
+          timestamp="$(TZ=America/New_York date '+%Y-%m-%d %H:%M')"
+          git commit -m "${timestamp}｜生成 issue #${{ steps.issue.outputs.number }} 的 Skill 投稿包"
           git push --force origin "$branch"
           git ls-remote --heads origin "$branch"
 
@@ -102,10 +107,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          title="Add skill from issue #${ISSUE_NUMBER}"
+          title="投稿 Skill #${ISSUE_NUMBER}"
           body="This draft PR was generated from issue #${ISSUE_NUMBER}.
 
-          Internal reviewers should verify classification, quality, originality, and formatting before marking it ready."
+          Internal reviewers should verify Agent Skill structure, Codex/Claude Code compatibility, classification, quality, originality, and formatting before marking it ready."
 
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Base: main"
