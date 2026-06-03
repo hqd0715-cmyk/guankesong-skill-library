@@ -15,6 +15,15 @@ skills/<skill-name>/
 
 其中只有 `SKILL.md` 是运行时必需文件，`skill.json` 是本共创库用于展示、分类和审核的索引元数据。
 
+## Claude Code 加载方式
+
+Claude Code 不会因为仓库根目录存在 `skills/` 就自动加载这些 skill。可选方式有两种：
+
+1. 作为个人或项目 skill 使用：把 `skills/<skill-name>/` 复制到 `~/.claude/skills/<skill-name>/` 或项目的 `.claude/skills/<skill-name>/`。
+2. 作为插件使用：本仓库带有 `.claude-plugin/plugin.json`，可以把仓库作为 Claude Code plugin 目录启用，插件内的 `skills/<skill-name>/SKILL.md` 会作为 plugin skill 加载。
+
+在 Claude Code 中引用 skill 自带脚本时，优先使用 `${CLAUDE_SKILL_DIR}`，不要写死仓库相对路径。这样 skill 被复制到个人目录、项目目录或作为 plugin 加载时都能找到自己的 `scripts/`。
+
 ## SKILL.md frontmatter
 
 通用模板只允许：

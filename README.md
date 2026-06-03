@@ -41,6 +41,11 @@ description: "说明这个 skill 做什么，以及什么时候使用。"
 
 更细的兼容说明见 [兼容性说明](docs/compatibility.md)。
 
+Claude Code 加载方式：
+
+- 复制单个 skill 到 `~/.claude/skills/<skill-name>/` 或项目 `.claude/skills/<skill-name>/`。
+- 或把本仓库作为 Claude Code plugin 启用；仓库已包含 `.claude-plugin/plugin.json`，plugin skills 位于 `skills/<skill-name>/`。
+
 ## 分类
 
 | 分类 | 适合内容 |
