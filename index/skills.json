@@ -23,8 +23,8 @@
     "title": "对抗性审查",
     "description": "用于对当前关键调用链提出系统稳定性失败假设并有目的地深入调查时使用。当需要针对调用契约、边界输入、状态机转换、异步链路、一致性和幂等性等问题进行假设驱动审查时触发。核心场景：宏观审查派发调查任务后的深入验证、接手遗留代码的稳定性风险评估、重构后的回归验证。注意：这不是安全漏洞审计，而是系统代码稳定性和边界情况的假设式调查。",
     "category": "AI + 专业方法论",
-    "author": "莞客松 Skill 共创库",
-    "github": "hqd0715-cmyk",
+    "author": "qihangzhang",
+    "github": "qihangzhang-272",
     "tags": [
       "code-review",
       "stability-review",
@@ -45,8 +45,8 @@
     "title": "宏观调用链追踪",
     "description": "用于长期多步骤任务中，需要对单条关键调用链进行深度稳定性追踪时使用。当任务跨越多个会话、需要 agent 接手上一轮调查、或需要维护调用链状态机和任务队列时触发。核心场景：多轮 agent 派发中保持注意力连续性、每轮只推进一个明确调查任务、后续 agent 不重新泛泛搜索而是从状态机接手。",
     "category": "AI + 专业方法论",
-    "author": "莞客松 Skill 共创库",
-    "github": "hqd0715-cmyk",
+    "author": "qihangzhang",
+    "github": "qihangzhang-272",
     "tags": [
       "code-review",
       "call-chain",
