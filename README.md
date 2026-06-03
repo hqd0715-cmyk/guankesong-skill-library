@@ -127,7 +127,9 @@ git diff --check
 
 ## GitHub Pages
 
-仓库内置轻量展示页 `index.html`，会读取 `index/skills.json` 展示已合并 skill。它不会实时扫描 `skills/` 目录；新增、迁移或删除 skill 后，必须先运行 `python scripts/ingest_issue.py --rebuild-index` 并把更新后的 `index/skills.json` 合并到 Pages 使用的分支。
+仓库内置轻量展示页 `index.html`，会优先通过 GitHub API 实时读取 `skills/<category>/<skill-name>/SKILL.md` 和 `skill.json`，失败时回退到 `index/skills.json`。默认读取 `main` 分支，也可以用 `?ref=<branch>` 预览其他分支，例如 `?ref=rebuild-standard-skill-library`。
+
+`index/skills.json` 仍建议保留并随投稿刷新，作为 GitHub API 限流、网络失败或本地静态预览时的兜底数据。
 
 启用方式：
 

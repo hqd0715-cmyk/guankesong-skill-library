@@ -154,6 +154,13 @@
       <section id="skills" class="grid" aria-live="polite"></section>
     </main>
     <script>
+      const REPOSITORY = "hqd0715-cmyk/guankesong-skill-library";
+      const CATEGORY_LABELS = {
+        "ai-shock": "AI Shock",
+        "ai-professional": "AI + 专业方法论",
+        "fun-skills": "整活 Skill",
+        "library-tools": "库维护工具",
+      };
       const state = { skills: [], search: "", category: "" };
       const skillsEl = document.querySelector("#skills");
       const searchEl = document.querySelector("#search");
@@ -224,6 +231,93 @@
         return platforms.join(" / ");
       }
 
+      function currentRef() {
+        return new URLSearchParams(window.location.search).get("ref") || "main";
+      }
+
+      async function fetchJson(url) {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return response.json();
+      }
+
+      async function fetchText(url) {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return response.text();
+      }
+
+      function parseFrontmatter(markdown) {
+        if (!markdown.startsWith("---\n")) return {};
+        const end = markdown.indexOf("\n---", 4);
+        if (end < 0) return {};
+        return markdown
+          .slice(4, end)
+          .split("\n")
+          .reduce((data, line) => {
+            const index = line.indexOf(":");
+            if (index < 0) return data;
+            const key = line.slice(0, index).trim();
+            const raw = line.slice(index + 1).trim();
+            data[key] = raw.replace(/^["']|["']$/g, "");
+            return data;
+          }, {});
+      }
+
+      function firstHeading(markdown, fallback) {
+        const heading = markdown.split("\n").find((line) => line.startsWith("# "));
+        return heading ? heading.slice(2).trim() : fallback;
+      }
+
+      async function loadSkillsFromRepository() {
+        const ref = currentRef();
+        const treeUrl = `https://api.github.com/repos/${REPOSITORY}/git/trees/${encodeURIComponent(ref)}?recursive=1`;
+        const tree = await fetchJson(treeUrl);
+        const skillFiles = (tree.tree || [])
+          .filter((item) => item.type === "blob" && /^skills\/[^/]+\/[^/]+\/SKILL\.md$/.test(item.path))
+          .sort((a, b) => a.path.localeCompare(b.path));
+
+        return Promise.all(skillFiles.map(async (item) => {
+          const parts = item.path.split("/");
+          const categoryDir = parts[1];
+          const name = parts[2];
+          const rawBase = `https://raw.githubusercontent.com/${REPOSITORY}/${encodeURIComponent(ref)}/skills/${categoryDir}/${name}`;
+          const [markdown, metadata] = await Promise.all([
+            fetchText(`${rawBase}/SKILL.md`),
+            fetchJson(`${rawBase}/skill.json`).catch(() => ({})),
+          ]);
+          const frontmatter = parseFrontmatter(markdown);
+          return {
+            name: frontmatter.name || metadata.name || name,
+            title: metadata.title || firstHeading(markdown, name),
+            description: frontmatter.description || "",
+            category: metadata.category || CATEGORY_LABELS[categoryDir] || "",
+            author: metadata.author || "",
+            github: metadata.github || "",
+            tags: Array.isArray(metadata.tags) ? metadata.tags : [],
+            difficulty: metadata.difficulty || "",
+            status: metadata.status || "",
+            platforms: Array.isArray(metadata.platforms) ? metadata.platforms : [],
+            path: item.path,
+            metadata_path: `skills/${categoryDir}/${name}/skill.json`,
+          };
+        }));
+      }
+
+      async function loadSkillsFromIndex() {
+        const skills = await fetchJson(`index/skills.json?v=${Date.now()}`);
+        return Array.isArray(skills) ? skills : [];
+      }
+
+      async function loadSkills() {
+        try {
+          return await loadSkillsFromRepository();
+        } catch (error) {
+          console.warn("Falling back to index/skills.json", error);
+          return loadSkillsFromIndex();
+        }
+      }
+
       searchEl.addEventListener("input", (event) => {
         state.search = event.target.value;
         render();
@@ -234,10 +328,9 @@
         render();
       });
 
-      fetch(`index/skills.json?v=${Date.now()}`)
-        .then((response) => response.json())
+      loadSkills()
         .then((skills) => {
-          state.skills = Array.isArray(skills) ? skills : [];
+          state.skills = skills;
           renderCategories();
           render();
         })
