@@ -39,8 +39,6 @@ description: "说明这个 skill 做什么，以及什么时候使用。"
 - `scripts/`、`references/`、`assets/` 等资源目录可以按需存在。
 - Claude Code 专属字段和本库索引字段不要写进 `SKILL.md`；索引信息放进 `skill.json`。
 
-更细的兼容说明见 [兼容性说明](docs/compatibility.md)。
-
 Claude Code 加载方式：
 
 - 复制单个 skill 到 `~/.claude/skills/<skill-name>/` 或项目 `.claude/skills/<skill-name>/`。
