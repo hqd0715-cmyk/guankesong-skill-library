@@ -208,7 +208,7 @@
                 </div>
                 <p class="description">${escapeHtml(skill.description || "")}</p>
                 <div class="meta">${escapeHtml(platformText(skill.platforms))}</div>
-                <div class="meta">${escapeHtml(skill.author || "未知作者")}</div>
+                <div class="meta">贡献者：${contributorHtml(skill)}</div>
                 <a href="${encodeURI(skill.path)}">查看 SKILL.md</a>
               </article>
             `
@@ -229,6 +229,13 @@
       function platformText(platforms) {
         if (!Array.isArray(platforms) || !platforms.length) return "平台未标注";
         return platforms.join(" / ");
+      }
+
+      function contributorHtml(skill) {
+        const author = escapeHtml(skill.author || "未知贡献者");
+        const github = String(skill.github || "").replace(/^@/, "").trim();
+        if (!github) return author;
+        return `${author} · <a href="https://github.com/${encodeURIComponent(github)}">${escapeHtml(`@${github}`)}</a>`;
       }
 
       function currentRef() {

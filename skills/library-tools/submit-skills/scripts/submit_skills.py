@@ -90,9 +90,38 @@ def read_metadata(skill_dir: Path) -> dict:
     return json.loads(metadata_file.read_text(encoding="utf-8"))
 
 
+def write_metadata(skill_dir: Path, metadata: dict) -> None:
+    metadata_file = skill_dir / "skill.json"
+    metadata_file.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def apply_contributor(metadata: dict, author: str | None, github: str | None) -> dict:
+    updated = dict(metadata)
+    if author:
+        updated["author"] = author
+    if github:
+        updated["github"] = github.lstrip("@")
+    return updated
+
+
+def ensure_contributor(metadata: dict, skill_dir: Path) -> None:
+    if not str(metadata.get("author", "")).strip():
+        raise SystemExit(
+            f"{skill_dir}: missing contributor author. Add skill.json author or pass --author."
+        )
+
+
 def category_dir_for(skill_dir: Path) -> str:
     category = read_metadata(skill_dir).get("category", "AI Shock")
     return CATEGORY_DIRS.get(category, "ai-shock")
+
+
+def prepare_skill_metadata(skill_dir: Path, author: str | None, github: str | None, dry_run: bool) -> dict:
+    metadata = apply_contributor(read_metadata(skill_dir), author, github)
+    ensure_contributor(metadata, skill_dir)
+    if not dry_run:
+        write_metadata(skill_dir, metadata)
+    return metadata
 
 
 def ensure_clean_repo(repo_dir: Path, allow_dirty: bool) -> None:
@@ -156,6 +185,8 @@ def main() -> int:
     parser.add_argument("--message", default=f"{datetime.now():%Y-%m-%d %H:%M}｜提交本地 Skill 到共创库审核")
     parser.add_argument("--remote", default="origin")
     parser.add_argument("--base", default="main")
+    parser.add_argument("--author", help="Contributor display name written to skill.json when missing or overridden.")
+    parser.add_argument("--github", help="Contributor GitHub username written to skill.json when provided.")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--push", action="store_true")
     parser.add_argument("--create-pr", action="store_true")
@@ -178,7 +209,11 @@ def main() -> int:
     print("Detected skill packages:")
     for skill_dir in skill_dirs:
         frontmatter = parse_frontmatter(skill_dir / "SKILL.md")
-        print(f"- {frontmatter.get('name', skill_dir.name)} from {skill_dir}")
+        metadata = prepare_skill_metadata(skill_dir, args.author, args.github, args.dry_run)
+        contributor = metadata.get("author", "")
+        github = metadata.get("github", "")
+        suffix = f" by {contributor}" + (f" (@{github})" if github else "")
+        print(f"- {frontmatter.get('name', skill_dir.name)} from {skill_dir}{suffix}")
 
     if args.dry_run:
         return 0

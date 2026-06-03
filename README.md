@@ -69,11 +69,11 @@ Claude Code 加载方式：
 仓库内置 `submit-skills`：
 
 ```bash
-python skills/library-tools/submit-skills/scripts/submit_skills.py --source <你的skills目录> --repo-dir . --dry-run
-python skills/library-tools/submit-skills/scripts/submit_skills.py --source <你的skills目录> --repo-dir . --push --create-pr
+python skills/library-tools/submit-skills/scripts/submit_skills.py --source <你的skills目录> --repo-dir . --author <作者昵称> --github <GitHub用户名> --dry-run
+python skills/library-tools/submit-skills/scripts/submit_skills.py --source <你的skills目录> --repo-dir . --author <作者昵称> --github <GitHub用户名> --push --create-pr
 ```
 
-第二条命令会整理本地标准 Agent Skill 包、刷新索引、创建审核分支，并在本机 GitHub 权限可用时创建 Draft PR。
+第二条命令会整理本地标准 Agent Skill 包，把作者信息写入 `skill.json`，刷新索引、创建审核分支，并在本机 GitHub 权限可用时创建 Draft PR。
 
 ## 本地维护
 
