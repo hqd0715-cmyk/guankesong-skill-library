@@ -234,7 +234,7 @@
         render();
       });
 
-      fetch("index/skills.json")
+      fetch(`index/skills.json?v=${Date.now()}`)
         .then((response) => response.json())
         .then((skills) => {
           state.skills = Array.isArray(skills) ? skills : [];

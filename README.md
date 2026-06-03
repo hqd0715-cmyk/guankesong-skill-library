@@ -127,7 +127,9 @@ git diff --check
 
 ## GitHub Pages
 
-仓库内置轻量展示页 `index.html`，会读取 `index/skills.json` 展示已合并 skill。启用方式：
+仓库内置轻量展示页 `index.html`，会读取 `index/skills.json` 展示已合并 skill。它不会实时扫描 `skills/` 目录；新增、迁移或删除 skill 后，必须先运行 `python scripts/ingest_issue.py --rebuild-index` 并把更新后的 `index/skills.json` 合并到 Pages 使用的分支。
+
+启用方式：
 
 1. 进入仓库 `Settings`。
 2. 打开 `Pages`。
