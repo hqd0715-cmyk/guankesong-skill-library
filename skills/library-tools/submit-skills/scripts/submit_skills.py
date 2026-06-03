@@ -49,6 +49,21 @@ def git_root(path: Path) -> Path | None:
     return Path(result.stdout.strip()).resolve()
 
 
+def current_github_user(repo_dir: Path) -> dict:
+    result = subprocess.run(
+        ["gh", "api", "user", "--jq", "{login:.login,name:.name}"],
+        cwd=repo_dir,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        return {}
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {}
+
+
 def parse_frontmatter(skill_file: Path) -> dict[str, str]:
     text = skill_file.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
@@ -95,12 +110,18 @@ def write_metadata(skill_dir: Path, metadata: dict) -> None:
     metadata_file.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def apply_contributor(metadata: dict, author: str | None, github: str | None) -> dict:
+def apply_contributor(metadata: dict, author: str | None, github: str | None, gh_user: dict) -> dict:
     updated = dict(metadata)
     if author:
         updated["author"] = author
-    if github:
-        updated["github"] = github.lstrip("@")
+    elif not str(updated.get("author", "")).strip() and gh_user.get("name"):
+        updated["author"] = gh_user["name"]
+    elif not str(updated.get("author", "")).strip() and gh_user.get("login"):
+        updated["author"] = gh_user["login"]
+
+    github_login = github or gh_user.get("login")
+    if github_login:
+        updated["github"] = github_login.lstrip("@")
     return updated
 
 
@@ -116,8 +137,14 @@ def category_dir_for(skill_dir: Path) -> str:
     return CATEGORY_DIRS.get(category, "ai-shock")
 
 
-def prepare_skill_metadata(skill_dir: Path, author: str | None, github: str | None, dry_run: bool) -> dict:
-    metadata = apply_contributor(read_metadata(skill_dir), author, github)
+def prepare_skill_metadata(
+    skill_dir: Path,
+    author: str | None,
+    github: str | None,
+    gh_user: dict,
+    dry_run: bool,
+) -> dict:
+    metadata = apply_contributor(read_metadata(skill_dir), author, github, gh_user)
     ensure_contributor(metadata, skill_dir)
     if not dry_run:
         write_metadata(skill_dir, metadata)
@@ -185,8 +212,8 @@ def main() -> int:
     parser.add_argument("--message", default=f"{datetime.now():%Y-%m-%d %H:%M}｜提交本地 Skill 到共创库审核")
     parser.add_argument("--remote", default="origin")
     parser.add_argument("--base", default="main")
-    parser.add_argument("--author", help="Contributor display name written to skill.json when missing or overridden.")
-    parser.add_argument("--github", help="Contributor GitHub username written to skill.json when provided.")
+    parser.add_argument("--author", help="Contributor display name. Defaults to GitHub profile name/login if missing.")
+    parser.add_argument("--github", help="Contributor GitHub username. Defaults to the current gh login when available.")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--push", action="store_true")
     parser.add_argument("--create-pr", action="store_true")
@@ -206,10 +233,11 @@ def main() -> int:
     if not skill_dirs:
         raise SystemExit(f"No SKILL.md files found under {source}")
 
+    gh_user = current_github_user(repo_dir)
     print("Detected skill packages:")
     for skill_dir in skill_dirs:
         frontmatter = parse_frontmatter(skill_dir / "SKILL.md")
-        metadata = prepare_skill_metadata(skill_dir, args.author, args.github, args.dry_run)
+        metadata = prepare_skill_metadata(skill_dir, args.author, args.github, gh_user, args.dry_run)
         contributor = metadata.get("author", "")
         github = metadata.get("github", "")
         suffix = f" by {contributor}" + (f" (@{github})" if github else "")
