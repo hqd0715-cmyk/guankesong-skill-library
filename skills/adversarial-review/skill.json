@@ -1,0 +1,21 @@
+{
+  "name": "adversarial-review",
+  "title": "对抗性审查",
+  "category": "AI + 专业方法论",
+  "author": "莞客松 Skill 共创库",
+  "github": "hqd0715-cmyk",
+  "tags": [
+    "code-review",
+    "stability-review",
+    "failure-hypothesis",
+    "agent-workflow"
+  ],
+  "status": "draft",
+  "created": "2026-06-03",
+  "updated": "2026-06-03",
+  "difficulty": "advanced",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ]
+}
