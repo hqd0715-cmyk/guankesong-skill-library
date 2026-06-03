@@ -4,17 +4,18 @@
 
 ## Skill 包结构
 
-每个 skill 必须是 `skills/` 下的直接子目录：
+每个 skill 必须放在对应大类目录下：
 
 ```text
 skills/
-└── your-skill-name/
-    ├── SKILL.md          # 必需：Agent Skill 入口，只包含通用 name/description frontmatter
-    ├── skill.json        # 建议：共创库索引元数据
-    ├── agents/           # 可选：OpenAI UI 元数据
-    ├── scripts/          # 可选：确定性脚本
-    ├── references/       # 可选：按需加载的参考资料
-    └── assets/           # 可选：模板、图片、字体等资源
+└── ai-professional/
+    └── your-skill-name/
+        ├── SKILL.md          # 必需：Agent Skill 入口，只包含通用 name/description frontmatter
+        ├── skill.json        # 建议：共创库索引元数据
+        ├── agents/           # 可选：OpenAI UI 元数据
+        ├── scripts/          # 可选：确定性脚本
+        ├── references/       # 可选：按需加载的参考资料
+        └── assets/           # 可选：模板、图片、字体等资源
 ```
 
 `SKILL.md` 的 YAML frontmatter 只保留 Codex 和 Claude Code 都能稳定理解的共同字段：
@@ -41,8 +42,8 @@ description: "说明这个 skill 做什么，以及什么时候使用。"
 
 Claude Code 加载方式：
 
-- 复制单个 skill 到 `~/.claude/skills/<skill-name>/` 或项目 `.claude/skills/<skill-name>/`。
-- 或把本仓库作为 Claude Code plugin 启用；仓库已包含 `.claude-plugin/plugin.json`，plugin skills 位于 `skills/<skill-name>/`。
+- 复制单个 skill 包，例如 `skills/ai-professional/your-skill-name/`，到 `~/.claude/skills/your-skill-name/` 或项目 `.claude/skills/your-skill-name/`。
+- 共创库内部保留大类目录，便于审核和检索；安装到 Claude Code 时只复制具体 skill 目录，不复制大类目录。
 
 ## 分类
 
@@ -60,7 +61,7 @@ Claude Code 加载方式：
 1. 进入仓库 Issues 页面。
 2. 选择 `Skill 投稿` 表单。
 3. 填写标题、分类、作者、标签、适用场景、步骤、Prompt 和案例。
-4. GitHub Actions 会生成 `skills/<skill-name>/SKILL.md` 和 `skill.json`，并自动创建 Draft PR。
+4. GitHub Actions 会按分类生成 `skills/<category>/<skill-name>/SKILL.md` 和 `skill.json`，并自动创建 Draft PR。
 5. 内部成员审核、修改、刷新索引后合并到 `main`。
 
 ### 方式二：本地 Agent Skill 包投稿
@@ -68,8 +69,8 @@ Claude Code 加载方式：
 仓库内置 `submit-skills`：
 
 ```bash
-python skills/submit-skills/scripts/submit_skills.py --source <你的skills目录> --repo-dir . --dry-run
-python skills/submit-skills/scripts/submit_skills.py --source <你的skills目录> --repo-dir . --push --create-pr
+python skills/library-tools/submit-skills/scripts/submit_skills.py --source <你的skills目录> --repo-dir . --dry-run
+python skills/library-tools/submit-skills/scripts/submit_skills.py --source <你的skills目录> --repo-dir . --push --create-pr
 ```
 
 第二条命令会整理本地标准 Agent Skill 包、刷新索引、创建审核分支，并在本机 GitHub 权限可用时创建 Draft PR。
@@ -101,9 +102,10 @@ git diff --check
 ```text
 .
 ├── skills/
-│   ├── submit-skills/
-│   ├── government-institution-text-polish/
-│   └── ...
+│   ├── ai-shock/
+│   ├── ai-professional/
+│   ├── fun-skills/
+│   └── library-tools/
 ├── templates/
 │   └── skill/
 │       ├── SKILL.md

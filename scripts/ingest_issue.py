@@ -7,11 +7,11 @@ from datetime import date
 from pathlib import Path
 
 
-CATEGORIES = {
-    "AI Shock",
-    "AI + 专业方法论",
-    "整活 Skill",
-    "库维护工具",
+CATEGORY_DIRS = {
+    "AI Shock": "ai-shock",
+    "AI + 专业方法论": "ai-professional",
+    "整活 Skill": "fun-skills",
+    "库维护工具": "library-tools",
 }
 
 FIELD_ALIASES = {
@@ -141,7 +141,7 @@ def skill_markdown(skill_id: str, fields: dict) -> str:
 def metadata_json(skill_id: str, fields: dict, issue_number: str | None) -> dict:
     today = date.today().isoformat()
     category = clean_value(fields.get("category", "AI Shock")) or "AI Shock"
-    if category not in CATEGORIES:
+    if category not in CATEGORY_DIRS:
         category = "AI Shock"
 
     data = {
@@ -202,7 +202,9 @@ def write_skill_package(root: Path, fields: dict, issue_number: str | None) -> P
     tags = split_tags(clean_value(fields.get("tags", "")))
     explicit_name = slugify(clean_value(fields.get("name", "")))
     skill_id = explicit_name or skill_name(title, tags, issue_number)
-    target = root / "skills" / skill_id
+    category = clean_value(fields.get("category", "AI Shock")) or "AI Shock"
+    category_dir = CATEGORY_DIRS.get(category, "ai-shock")
+    target = root / "skills" / category_dir / skill_id
     target.mkdir(parents=True, exist_ok=True)
     (target / "SKILL.md").write_text(skill_markdown(skill_id, fields), encoding="utf-8")
     (target / "skill.json").write_text(
@@ -214,7 +216,7 @@ def write_skill_package(root: Path, fields: dict, issue_number: str | None) -> P
 
 def rebuild_index(root: Path) -> None:
     skills = []
-    for skill_file in sorted((root / "skills").glob("*/SKILL.md")):
+    for skill_file in sorted((root / "skills").glob("*/*/SKILL.md")):
         frontmatter = parse_frontmatter(skill_file)
         metadata = read_metadata(skill_file.parent)
         name = frontmatter.get("name") or metadata.get("name") or skill_file.parent.name

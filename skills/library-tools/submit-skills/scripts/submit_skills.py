@@ -1,4 +1,5 @@
 import argparse
+import json
 import shutil
 import subprocess
 import sys
@@ -20,6 +21,13 @@ EXCLUDED_NAMES = {
     "dist",
     "build",
     "templates",
+}
+
+CATEGORY_DIRS = {
+    "AI Shock": "ai-shock",
+    "AI + 专业方法论": "ai-professional",
+    "整活 Skill": "fun-skills",
+    "库维护工具": "library-tools",
 }
 
 
@@ -75,6 +83,18 @@ def should_ignore(_directory: str, names: list[str]) -> set[str]:
     return {name for name in names if name in EXCLUDED_NAMES}
 
 
+def read_metadata(skill_dir: Path) -> dict:
+    metadata_file = skill_dir / "skill.json"
+    if not metadata_file.exists():
+        return {}
+    return json.loads(metadata_file.read_text(encoding="utf-8"))
+
+
+def category_dir_for(skill_dir: Path) -> str:
+    category = read_metadata(skill_dir).get("category", "AI Shock")
+    return CATEGORY_DIRS.get(category, "ai-shock")
+
+
 def ensure_clean_repo(repo_dir: Path, allow_dirty: bool) -> None:
     status = run(["git", "status", "--porcelain"], cwd=repo_dir).stdout.strip()
     if status and not allow_dirty:
@@ -89,7 +109,7 @@ def copy_skill(skill_dir: Path, repo_dir: Path) -> Path:
     if not name:
         raise SystemExit(f"{skill_dir}: SKILL.md frontmatter must include name")
 
-    target = repo_dir / "skills" / name
+    target = repo_dir / "skills" / category_dir_for(skill_dir) / name
     target_parent = (repo_dir / "skills").resolve()
     resolved_target = target.resolve()
     if target_parent not in [resolved_target, *resolved_target.parents]:
@@ -99,6 +119,9 @@ def copy_skill(skill_dir: Path, repo_dir: Path) -> Path:
         print(f"Already in target location: {target.relative_to(repo_dir)}")
         return target
 
+    for existing in (repo_dir / "skills").glob(f"*/{name}"):
+        if existing.resolve() != target.resolve():
+            shutil.rmtree(existing)
     if target.exists():
         shutil.rmtree(target)
     shutil.copytree(skill_dir, target, ignore=should_ignore)
@@ -111,11 +134,9 @@ def rebuild_and_validate(repo_dir: Path) -> None:
     run([sys.executable, "scripts/validate_skills.py"], cwd=repo_dir)
 
 
-def commit_changes(repo_dir: Path, branch: str, message: str, paths: list[Path]) -> bool:
+def commit_changes(repo_dir: Path, branch: str, message: str, _paths: list[Path]) -> bool:
     run(["git", "checkout", "-B", branch], cwd=repo_dir)
-    for path in paths:
-        run(["git", "add", str(path.relative_to(repo_dir))], cwd=repo_dir)
-    run(["git", "add", "index/skills.json"], cwd=repo_dir)
+    run(["git", "add", "skills", "index/skills.json"], cwd=repo_dir)
 
     diff = run(["git", "diff", "--cached", "--stat"], cwd=repo_dir).stdout.strip()
     if not diff:

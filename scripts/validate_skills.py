@@ -6,7 +6,13 @@ from pathlib import Path
 
 VALID_NAME = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$")
 VALID_FRONTMATTER_KEYS = {"name", "description"}
-VALID_CATEGORIES = {"AI Shock", "AI + 专业方法论", "整活 Skill", "库维护工具", ""}
+VALID_CATEGORY_DIRS = {
+    "AI Shock": "ai-shock",
+    "AI + 专业方法论": "ai-professional",
+    "整活 Skill": "fun-skills",
+    "库维护工具": "library-tools",
+}
+VALID_CATEGORIES = {*VALID_CATEGORY_DIRS, ""}
 RESERVED_NAME_PARTS = {"anthropic", "claude"}
 
 
@@ -36,7 +42,7 @@ def parse_frontmatter(path: Path) -> tuple[dict, set[str]]:
     return data, keys
 
 
-def validate_skill(skill_dir: Path) -> list[str]:
+def validate_skill(skill_dir: Path, skills_root: Path) -> list[str]:
     errors = []
     skill_file = skill_dir / "SKILL.md"
     if not skill_file.exists():
@@ -62,6 +68,8 @@ def validate_skill(skill_dir: Path) -> list[str]:
         errors.append(f"{skill_file}: name must not contain reserved terms: anthropic, claude")
     if name != skill_dir.name:
         errors.append(f"{skill_file}: frontmatter name must match folder '{skill_dir.name}'")
+    if skill_dir.parent.parent != skills_root:
+        errors.append(f"{skill_file}: skill package must live under skills/<category>/<name>/")
     if len(description.strip()) < 20:
         errors.append(f"{skill_file}: description is too short")
 
@@ -76,6 +84,11 @@ def validate_skill(skill_dir: Path) -> list[str]:
             errors.append(f"{metadata_file}: name must match SKILL.md")
         if metadata.get("category", "") not in VALID_CATEGORIES:
             errors.append(f"{metadata_file}: unsupported category '{metadata.get('category')}'")
+        expected_category_dir = VALID_CATEGORY_DIRS.get(metadata.get("category", ""))
+        if expected_category_dir and skill_dir.parent.name != expected_category_dir:
+            errors.append(
+                f"{metadata_file}: category '{metadata.get('category')}' must live under skills/{expected_category_dir}/"
+            )
         if not isinstance(metadata.get("tags", []), list):
             errors.append(f"{metadata_file}: tags must be a list")
         if "platforms" in metadata and not isinstance(metadata["platforms"], list):
@@ -91,13 +104,17 @@ def main() -> int:
         print("skills directory not found", file=sys.stderr)
         return 1
 
-    skill_dirs = sorted(path for path in skills_root.iterdir() if path.is_dir() and (path / "SKILL.md").exists())
+    skill_dirs = sorted(path for path in skills_root.glob("*/*") if path.is_dir() and (path / "SKILL.md").exists())
     errors = []
     for skill_dir in skill_dirs:
-        errors.extend(validate_skill(skill_dir))
+        errors.extend(validate_skill(skill_dir, skills_root))
 
     if not skill_dirs:
-        errors.append("no skill packages found under skills/*/SKILL.md")
+        errors.append("no skill packages found under skills/<category>/<name>/SKILL.md")
+
+    direct_skill_files = sorted(skills_root.glob("*/SKILL.md"))
+    for skill_file in direct_skill_files:
+        errors.append(f"{skill_file}: direct skills are not allowed; use skills/<category>/<name>/SKILL.md")
 
     if errors:
         for error in errors:

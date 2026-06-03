@@ -1,8 +1,0 @@
-{
-  "name": "guankesong-skill-library",
-  "version": "0.1.0",
-  "description": "莞客松 Agent Skill 共创库，包含兼容 Codex 和 Claude Code 的可复用 skills。",
-  "author": {
-    "name": "莞客松 Skill 共创库"
-  }
-}

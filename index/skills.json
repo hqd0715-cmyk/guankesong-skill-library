@@ -15,8 +15,8 @@
       "codex",
       "claude-code"
     ],
-    "path": "skills/1/SKILL.md",
-    "metadata_path": "skills/1/skill.json"
+    "path": "skills/ai-professional/1/SKILL.md",
+    "metadata_path": "skills/ai-professional/1/skill.json"
   },
   {
     "name": "adversarial-review",
@@ -37,8 +37,30 @@
       "codex",
       "claude-code"
     ],
-    "path": "skills/adversarial-review/SKILL.md",
-    "metadata_path": "skills/adversarial-review/skill.json"
+    "path": "skills/ai-professional/adversarial-review/SKILL.md",
+    "metadata_path": "skills/ai-professional/adversarial-review/skill.json"
+  },
+  {
+    "name": "macro-chain-review",
+    "title": "宏观调用链追踪",
+    "description": "用于长期多步骤任务中，需要对单条关键调用链进行深度稳定性追踪时使用。当任务跨越多个会话、需要 agent 接手上一轮调查、或需要维护调用链状态机和任务队列时触发。核心场景：多轮 agent 派发中保持注意力连续性、每轮只推进一个明确调查任务、后续 agent 不重新泛泛搜索而是从状态机接手。",
+    "category": "AI + 专业方法论",
+    "author": "莞客松 Skill 共创库",
+    "github": "hqd0715-cmyk",
+    "tags": [
+      "code-review",
+      "call-chain",
+      "state-machine",
+      "agent-workflow"
+    ],
+    "difficulty": "advanced",
+    "status": "draft",
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/ai-professional/macro-chain-review/SKILL.md",
+    "metadata_path": "skills/ai-professional/macro-chain-review/skill.json"
   },
   {
     "name": "government-institution-text-polish",
@@ -65,30 +87,8 @@
       "codex",
       "claude-code"
     ],
-    "path": "skills/government-institution-text-polish/SKILL.md",
-    "metadata_path": "skills/government-institution-text-polish/skill.json"
-  },
-  {
-    "name": "macro-chain-review",
-    "title": "宏观调用链追踪",
-    "description": "用于长期多步骤任务中，需要对单条关键调用链进行深度稳定性追踪时使用。当任务跨越多个会话、需要 agent 接手上一轮调查、或需要维护调用链状态机和任务队列时触发。核心场景：多轮 agent 派发中保持注意力连续性、每轮只推进一个明确调查任务、后续 agent 不重新泛泛搜索而是从状态机接手。",
-    "category": "AI + 专业方法论",
-    "author": "莞客松 Skill 共创库",
-    "github": "hqd0715-cmyk",
-    "tags": [
-      "code-review",
-      "call-chain",
-      "state-machine",
-      "agent-workflow"
-    ],
-    "difficulty": "advanced",
-    "status": "draft",
-    "platforms": [
-      "codex",
-      "claude-code"
-    ],
-    "path": "skills/macro-chain-review/SKILL.md",
-    "metadata_path": "skills/macro-chain-review/skill.json"
+    "path": "skills/ai-shock/government-institution-text-polish/SKILL.md",
+    "metadata_path": "skills/ai-shock/government-institution-text-polish/skill.json"
   },
   {
     "name": "submit-skills",
@@ -109,7 +109,7 @@
       "codex",
       "claude-code"
     ],
-    "path": "skills/submit-skills/SKILL.md",
-    "metadata_path": "skills/submit-skills/skill.json"
+    "path": "skills/library-tools/submit-skills/SKILL.md",
+    "metadata_path": "skills/library-tools/submit-skills/skill.json"
   }
 ]
