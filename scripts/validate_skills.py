@@ -84,6 +84,8 @@ def validate_skill(skill_dir: Path, skills_root: Path) -> list[str]:
             errors.append(f"{metadata_file}: name must match SKILL.md")
         if metadata.get("category", "") not in VALID_CATEGORIES:
             errors.append(f"{metadata_file}: unsupported category '{metadata.get('category')}'")
+        if not str(metadata.get("author", "")).strip():
+            errors.append(f"{metadata_file}: author is required")
         expected_category_dir = VALID_CATEGORY_DIRS.get(metadata.get("category", ""))
         if expected_category_dir and skill_dir.parent.name != expected_category_dir:
             errors.append(
