@@ -50,19 +50,12 @@ def git_root(path: Path) -> Path | None:
 
 
 def current_github_user(repo_dir: Path) -> dict:
-    if not shutil.which("gh"):
-        return {}
-
-    try:
-        result = subprocess.run(
-            ["gh", "api", "user", "--jq", "{login:.login,name:.name}"],
-            cwd=repo_dir,
-            text=True,
-            capture_output=True,
-        )
-    except FileNotFoundError:
-        return {}
-
+    result = subprocess.run(
+        ["gh", "api", "user", "--jq", "{login:.login,name:.name}"],
+        cwd=repo_dir,
+        text=True,
+        capture_output=True,
+    )
     if result.returncode != 0:
         return {}
     try:
@@ -139,14 +132,9 @@ def ensure_contributor(metadata: dict, skill_dir: Path) -> None:
         )
 
 
-def category_dir_for(metadata: dict, skill_dir: Path) -> str:
-    category = str(metadata.get("category", "AI Shock") or "AI Shock").strip()
-    if category not in CATEGORY_DIRS:
-        supported = ", ".join(CATEGORY_DIRS)
-        raise SystemExit(
-            f"{skill_dir}: unsupported category '{category}'. Supported categories: {supported}."
-        )
-    return CATEGORY_DIRS[category]
+def category_dir_for(skill_dir: Path) -> str:
+    category = read_metadata(skill_dir).get("category", "AI Shock")
+    return CATEGORY_DIRS.get(category, "ai-shock")
 
 
 def prepare_skill_metadata(
@@ -154,9 +142,12 @@ def prepare_skill_metadata(
     author: str | None,
     github: str | None,
     gh_user: dict,
+    dry_run: bool,
 ) -> dict:
     metadata = apply_contributor(read_metadata(skill_dir), author, github, gh_user)
     ensure_contributor(metadata, skill_dir)
+    if not dry_run:
+        write_metadata(skill_dir, metadata)
     return metadata
 
 
@@ -168,79 +159,30 @@ def ensure_clean_repo(repo_dir: Path, allow_dirty: bool) -> None:
         )
 
 
-def relative_to_repo(repo_dir: Path, path: Path) -> str:
-    return path.resolve().relative_to(repo_dir.resolve()).as_posix()
-
-
-def skill_name_for(skill_dir: Path) -> str:
+def copy_skill(skill_dir: Path, repo_dir: Path) -> Path:
     frontmatter = parse_frontmatter(skill_dir / "SKILL.md")
     name = frontmatter.get("name", "").strip()
     if not name:
         raise SystemExit(f"{skill_dir}: SKILL.md frontmatter must include name")
-    return name
 
-
-def target_for_skill(skill_dir: Path, repo_dir: Path, metadata: dict) -> Path:
-    name = skill_name_for(skill_dir)
-    target = repo_dir / "skills" / category_dir_for(metadata, skill_dir) / name
+    target = repo_dir / "skills" / category_dir_for(skill_dir) / name
     target_parent = (repo_dir / "skills").resolve()
     resolved_target = target.resolve()
     if target_parent not in [resolved_target, *resolved_target.parents]:
         raise SystemExit(f"Refusing to write outside skills/: {target}")
-    return target
-
-
-def conflicting_skill_paths(repo_dir: Path, name: str, target: Path) -> list[Path]:
-    return [
-        existing
-        for existing in (repo_dir / "skills").glob(f"*/{name}")
-        if existing.resolve() != target.resolve()
-    ]
-
-
-def ensure_no_unapproved_conflicts(
-    skill_dir: Path,
-    repo_dir: Path,
-    name: str,
-    conflicts: list[Path],
-    replace_existing: bool,
-) -> None:
-    if conflicts and not replace_existing:
-        conflict_list = ", ".join(relative_to_repo(repo_dir, path) for path in conflicts)
-        raise SystemExit(
-            f"{skill_dir}: skill name '{name}' already exists in another category: {conflict_list}. "
-            "Rerun with --replace-existing to move it."
-        )
-
-
-def copy_skill(
-    skill_dir: Path,
-    repo_dir: Path,
-    metadata: dict,
-    replace_existing: bool,
-) -> list[Path]:
-    name = skill_name_for(skill_dir)
-    target = target_for_skill(skill_dir, repo_dir, metadata)
-
-    changed_paths = [target]
-    existing_conflicts = conflicting_skill_paths(repo_dir, name, target)
-    ensure_no_unapproved_conflicts(skill_dir, repo_dir, name, existing_conflicts, replace_existing)
 
     if skill_dir.resolve() == resolved_target:
-        write_metadata(target, metadata)
         print(f"Already in target location: {target.relative_to(repo_dir)}")
-        return changed_paths
+        return target
 
-    for existing in existing_conflicts:
-        shutil.rmtree(existing)
-        changed_paths.append(existing)
-
+    for existing in (repo_dir / "skills").glob(f"*/{name}"):
+        if existing.resolve() != target.resolve():
+            shutil.rmtree(existing)
     if target.exists():
         shutil.rmtree(target)
     shutil.copytree(skill_dir, target, ignore=should_ignore)
-    write_metadata(target, metadata)
     print(f"Copied {skill_dir} -> {target.relative_to(repo_dir)}")
-    return changed_paths
+    return target
 
 
 def rebuild_and_validate(repo_dir: Path) -> None:
@@ -248,17 +190,9 @@ def rebuild_and_validate(repo_dir: Path) -> None:
     run([sys.executable, "scripts/validate_skills.py"], cwd=repo_dir)
 
 
-def commit_changes(repo_dir: Path, branch: str, message: str, paths: list[Path]) -> bool:
+def commit_changes(repo_dir: Path, branch: str, message: str, _paths: list[Path]) -> bool:
     run(["git", "checkout", "-B", branch], cwd=repo_dir)
-
-    add_paths = []
-    seen = set()
-    for path in [*paths, repo_dir / "index" / "skills.json"]:
-        relative_path = relative_to_repo(repo_dir, path)
-        if relative_path not in seen:
-            seen.add(relative_path)
-            add_paths.append(relative_path)
-    run(["git", "add", "--", *add_paths], cwd=repo_dir)
+    run(["git", "add", "skills", "index/skills.json"], cwd=repo_dir)
 
     diff = run(["git", "diff", "--cached", "--stat"], cwd=repo_dir).stdout.strip()
     if not diff:
@@ -275,7 +209,7 @@ def main() -> int:
     parser.add_argument("--source", default=".", help="Folder containing one or more Agent Skill packages.")
     parser.add_argument("--repo-dir", help="Local guankesong-skill-library checkout. Defaults to current git root.")
     parser.add_argument("--branch", default=f"skill-submission/local-{datetime.now():%Y%m%d-%H%M}")
-    parser.add_argument("--message", default=f"{datetime.now():%Y-%m-%d %H:%M}～提交本地 Skill 到共创库审核")
+    parser.add_argument("--message", default=f"{datetime.now():%Y-%m-%d %H:%M}｜提交本地 Skill 到共创库审核")
     parser.add_argument("--remote", default="origin")
     parser.add_argument("--base", default="main")
     parser.add_argument("--author", help="Contributor display name. Defaults to GitHub profile name/login if missing.")
@@ -284,11 +218,6 @@ def main() -> int:
     parser.add_argument("--push", action="store_true")
     parser.add_argument("--create-pr", action="store_true")
     parser.add_argument("--allow-dirty", action="store_true")
-    parser.add_argument(
-        "--replace-existing",
-        action="store_true",
-        help="Move a skill when the same name already exists in another category.",
-    )
     args = parser.parse_args()
 
     source = Path(args.source).resolve()
@@ -304,36 +233,27 @@ def main() -> int:
     if not skill_dirs:
         raise SystemExit(f"No SKILL.md files found under {source}")
 
-    gh_user = current_github_user(repo_dir) if not args.author or not args.github else {}
-    planned_skills = []
+    gh_user = current_github_user(repo_dir)
     print("Detected skill packages:")
     for skill_dir in skill_dirs:
-        name = skill_name_for(skill_dir)
-        metadata = prepare_skill_metadata(skill_dir, args.author, args.github, gh_user)
-        target = target_for_skill(skill_dir, repo_dir, metadata)
-        conflicts = conflicting_skill_paths(repo_dir, name, target)
-        ensure_no_unapproved_conflicts(skill_dir, repo_dir, name, conflicts, args.replace_existing)
-        planned_skills.append((skill_dir, metadata))
+        frontmatter = parse_frontmatter(skill_dir / "SKILL.md")
+        metadata = prepare_skill_metadata(skill_dir, args.author, args.github, gh_user, args.dry_run)
         contributor = metadata.get("author", "")
         github = metadata.get("github", "")
         suffix = f" by {contributor}" + (f" (@{github})" if github else "")
-        print(f"- {name} from {skill_dir}{suffix} -> {relative_to_repo(repo_dir, target)}")
+        print(f"- {frontmatter.get('name', skill_dir.name)} from {skill_dir}{suffix}")
 
     if args.dry_run:
         return 0
 
     ensure_clean_repo(repo_dir, args.allow_dirty)
-    copied_paths = []
-    for skill_dir, metadata in planned_skills:
-        copied_paths.extend(copy_skill(skill_dir, repo_dir, metadata, args.replace_existing))
+    copied_paths = [copy_skill(skill_dir, repo_dir) for skill_dir in skill_dirs]
     rebuild_and_validate(repo_dir)
     committed = commit_changes(repo_dir, args.branch, args.message, copied_paths)
 
     if committed and args.push:
         run(["git", "push", "-u", args.remote, args.branch], cwd=repo_dir)
         if args.create_pr:
-            if not shutil.which("gh"):
-                raise SystemExit("--create-pr requires GitHub CLI (gh). Push completed; create the PR manually.")
             run(
                 [
                     "gh",
