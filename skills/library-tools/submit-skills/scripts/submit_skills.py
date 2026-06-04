@@ -226,7 +226,7 @@ def copy_skill(
     existing_conflicts = conflicting_skill_paths(repo_dir, name, target)
     ensure_no_unapproved_conflicts(skill_dir, repo_dir, name, existing_conflicts, replace_existing)
 
-    if skill_dir.resolve() == resolved_target:
+    if skill_dir.resolve() == target.resolve():
         write_metadata(target, metadata)
         print(f"Already in target location: {target.relative_to(repo_dir)}")
         return changed_paths
