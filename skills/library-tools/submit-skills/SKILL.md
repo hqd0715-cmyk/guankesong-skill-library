@@ -1,62 +1,56 @@
 ---
 name: "submit-skills"
-description: "Organize local Agent Skill packages and submit them to the Guankesong Skill Library review branch. Use when the user asks to submit, contribute, publish, push, import, or organize local Codex or Claude Code skills for review in this GitHub skill library. Basic dry-run, copy, validate, and commit steps do not require GitHub CLI; only Draft PR creation requires gh."
+description: "整理当前文件夹中的标准 Agent Skills，并把它们提交到莞客松 Skill 共创库的审核分支。Use when the user asks to submit, contribute, publish, push, or organize local Codex or Claude Code skills for review in this GitHub skill library."
 ---
 
 # Submit Skills
 
-Use this skill to collect one or more local Agent Skill packages, copy them into the Guankesong Skill Library category structure, rebuild the index, validate the repository, and optionally commit, push, or create a Draft PR.
+## 工作流
 
-## Workflow
-
-1. Confirm the source folder contains standard skill packages. Each skill package must include `SKILL.md`; its frontmatter must contain only `name` and `description`.
-2. Confirm contributor metadata. Each skill should have `skill.json.author`, or pass `--author`. Pass `--github` when known. The script can use the current `gh` login as a fallback, but it must not require `gh` when `--author` and `--github` are provided.
-3. Confirm the target repository is a local `guankesong-skill-library` checkout and the worktree is clean unless the user explicitly allows `--allow-dirty`.
-4. Run a dry-run first:
+1. 确认当前目录或用户指定目录中存在标准 Agent Skill 包：每个 skill 目录必须包含 `SKILL.md`，且 frontmatter 只有 `name` 和 `description`。
+2. 确认每个 skill 的 `skill.json` 里有贡献者信息：`author` 必填，`github` 建议填写。不想手动改 `skill.json` 时，在脚本里传 `--author` 和 `--github`。如果没有传 `--github`，脚本会尝试读取当前 `gh` 登录账号。
+3. 克隆或进入莞客松 Skill 共创库，并保持工作区干净。
+4. 先执行 dry-run，查看会提交哪些 skill 和贡献者：
 
 ```bash
-python "${CLAUDE_SKILL_DIR:-skills/library-tools/submit-skills}/scripts/submit_skills.py" --source <skills-to-submit> --repo-dir <library-repo> --author <author> --github <github-user> --dry-run
+python "${CLAUDE_SKILL_DIR:-skills/library-tools/submit-skills}/scripts/submit_skills.py" --source <待投稿目录> --repo-dir <共创库目录> --author <作者昵称> --github <GitHub用户名> --dry-run
 ```
 
 ```powershell
 $skillDir = if ($env:CLAUDE_SKILL_DIR) { $env:CLAUDE_SKILL_DIR } else { "skills\library-tools\submit-skills" }
-python "$skillDir\scripts\submit_skills.py" --source <skills-to-submit> --repo-dir <library-repo> --author <author> --github <github-user> --dry-run
+python "$skillDir\scripts\submit_skills.py" --source <待投稿目录> --repo-dir <共创库目录> --author <作者昵称> --github <GitHub用户名> --dry-run
 ```
 
-5. If the dry-run is correct, create the review branch and local commit:
+5. 如果结果正确，再创建审核分支并提交：
 
 ```bash
-python "${CLAUDE_SKILL_DIR:-skills/library-tools/submit-skills}/scripts/submit_skills.py" --source <skills-to-submit> --repo-dir <library-repo> --author <author> --github <github-user>
+python "${CLAUDE_SKILL_DIR:-skills/library-tools/submit-skills}/scripts/submit_skills.py" --source <待投稿目录> --repo-dir <共创库目录> --author <作者昵称> --github <GitHub用户名>
 ```
 
 ```powershell
 $skillDir = if ($env:CLAUDE_SKILL_DIR) { $env:CLAUDE_SKILL_DIR } else { "skills\library-tools\submit-skills" }
-python "$skillDir\scripts\submit_skills.py" --source <skills-to-submit> --repo-dir <library-repo> --author <author> --github <github-user>
+python "$skillDir\scripts\submit_skills.py" --source <待投稿目录> --repo-dir <共创库目录> --author <作者昵称> --github <GitHub用户名>
 ```
 
-6. Add `--push` only when the user explicitly asks to push the branch. Add `--create-pr` only when GitHub CLI is installed and the user wants an automatic Draft PR:
+6. 用户明确要求推送或等待审核时，再加 `--push`。如果本机已登录 GitHub CLI，可以同时加 `--create-pr` 创建 Draft PR：
 
 ```bash
-python "${CLAUDE_SKILL_DIR:-skills/library-tools/submit-skills}/scripts/submit_skills.py" --source <skills-to-submit> --repo-dir <library-repo> --author <author> --github <github-user> --push --create-pr
+python "${CLAUDE_SKILL_DIR:-skills/library-tools/submit-skills}/scripts/submit_skills.py" --source <待投稿目录> --repo-dir <共创库目录> --author <作者昵称> --github <GitHub用户名> --push --create-pr
 ```
 
-## Submission Rules
+```powershell
+$skillDir = if ($env:CLAUDE_SKILL_DIR) { $env:CLAUDE_SKILL_DIR } else { "skills\library-tools\submit-skills" }
+python "$skillDir\scripts\submit_skills.py" --source <待投稿目录> --repo-dir <共创库目录> --author <作者昵称> --github <GitHub用户名> --push --create-pr
+```
 
-- Submit only standard Agent Skill packages. Do not copy temporary files, `.git`, `node_modules`, `__pycache__`, build artifacts, virtual environments, or generated caches into the library.
-- Do not require GitHub CLI for dry-run, copy, validation, or local commit. Treat `gh` as optional and only required for `--create-pr`.
-- Do not submit skills without contributor information. Prefer explicit `--author` and `--github`; use `gh` profile data only as a fallback.
-- Do not silently move a skill that already exists under another category. Use `--replace-existing` only when the user explicitly wants to move it.
-- Before push, inspect `git diff --stat` and `git status --short`.
-- If the library worktree has uncommitted changes, stop unless the user explicitly allows `--allow-dirty`.
-- Commit messages should use `YYYY-MM-DD HH:mm～中文变更描述`.
+## 提交规则
 
-## Script Behavior
+- 只提交标准 Agent Skill 包，不把临时文件、`.git`、`node_modules`、`__pycache__`、构建产物或虚拟环境复制进仓库。
+- 不提交没有作者信息的 skill；没有 `skill.json.author` 时会优先使用 `--author`，其次使用当前 GitHub profile name 或 login。
+- 推送前必须检查 `git diff --stat` 和 `git status --short`。
+- 如果共创库已有未提交改动，先停下确认，除非用户明确允许混合处理。
+- 提交信息必须使用 `YYYY-MM-DD HH:mm｜中文变更描述` 格式。
 
-`scripts/submit_skills.py` scans local skill packages, applies contributor metadata to the copied package, places each skill under `skills/<category>/<name>/`, rebuilds `index/skills.json`, validates the repository, and commits only the copied skill paths plus the index.
+## 资源
 
-Supported categories are:
-
-- `AI Shock` -> `skills/ai-shock`
-- `AI + 专业方法论` -> `skills/ai-professional`
-- `整活 Skill` -> `skills/fun-skills`
-- `库维护工具` -> `skills/library-tools`
+- `scripts/submit_skills.py`：扫描本地 Agent Skill 包、按 `skill.json.category` 复制到共创库 `skills/<category>/<name>/`、刷新索引、校验结构、提交分支，并可选推送或创建 Draft PR。
