@@ -91,9 +91,32 @@
     "metadata_path": "skills/ai-shock/government-institution-text-polish/skill.json"
   },
   {
+    "name": "wechat-official-account-writer",
+    "title": "公众号推文写作",
+    "description": "Plan, research, draft, revise, and quality-check Chinese WeChat Official Account articles. Use when the user asks to write, rewrite, polish, outline, title, localize, or prepare a 微信公众号/公众号推文 article, including topic ideation, angle selection, source research, mobile-readable structure, title hooks, summaries, calls to action, and final editorial review.",
+    "category": "AI Shock",
+    "author": "hqd0715-cmyk",
+    "github": "hqd0715-cmyk",
+    "tags": [
+      "wechat",
+      "official-account",
+      "writing",
+      "content-strategy",
+      "fact-checking"
+    ],
+    "difficulty": "beginner",
+    "status": "draft",
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/ai-shock/wechat-official-account-writer/SKILL.md",
+    "metadata_path": "skills/ai-shock/wechat-official-account-writer/skill.json"
+  },
+  {
     "name": "submit-skills",
     "title": "投稿 Skills",
-    "description": "整理当前文件夹中的标准 Agent Skills，并把它们提交到莞客松 Skill 共创库的审核分支。Use when the user asks to submit, contribute, publish, push, or organize local Codex or Claude Code skills for review in this GitHub skill library.",
+    "description": "Organize local Agent Skill packages and submit them to the Guankesong Skill Library review branch. Use when the user asks to submit, contribute, publish, push, import, or organize local Codex or Claude Code skills for review in this GitHub skill library. Basic dry-run, copy, validate, and commit steps do not require GitHub CLI; only Draft PR creation requires gh.",
     "category": "库维护工具",
     "author": "莞客松 Skill 共创库",
     "github": "hqd0715-cmyk",

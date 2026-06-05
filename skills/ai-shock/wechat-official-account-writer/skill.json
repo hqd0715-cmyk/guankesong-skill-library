@@ -1,0 +1,22 @@
+{
+  "name": "wechat-official-account-writer",
+  "title": "公众号推文写作",
+  "category": "AI Shock",
+  "author": "hqd0715-cmyk",
+  "github": "hqd0715-cmyk",
+  "tags": [
+    "wechat",
+    "official-account",
+    "writing",
+    "content-strategy",
+    "fact-checking"
+  ],
+  "status": "draft",
+  "created": "2026-06-04",
+  "updated": "2026-06-04",
+  "difficulty": "beginner",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ]
+}
