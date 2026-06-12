@@ -16,12 +16,15 @@
 
 ## 快速开始
 
-1. 在 `index/skills.json`、仓库目录或 GitHub Pages 展示页中找到需要的 Skill。
-2. 复制整个 `skills/<category>/<skill-name>/` 目录到对应客户端的 skills 目录。
-3. 重启或重新加载客户端。
-4. 在请求中直接描述任务；需要强制触发时，可明确写出 Skill 名称。
+1. 打开 [GitHub Pages 展示页](https://hqd0715-cmyk.github.io/guankesong-skill-library/)。
+2. 搜索任务关键词，默认只查看已审核的 `reviewed` Skill。
+3. 点击卡片中的按钮，复制 Codex 或 Claude Code 取用提示词。
+4. 让本地 Agent 安装完整 Skill 目录。
+5. 重启或重新加载客户端；需要强制触发时，可明确写出 Skill 名称。
 
 不要只复制 `SKILL.md`。Skill 可能依赖同目录下的 `scripts/`、`references/`、`assets/` 或 `agents/`。
+
+不知道该选哪个 Skill 时，可以让 Agent 读取 `index/skills.json` 后按任务推荐。完整流程和可复制提示词见 [外部成员检索与取用指南](docs/external-skill-usage.md)。
 
 ## Skill 包结构
 
@@ -194,6 +197,7 @@ git diff --exit-code index/skills.json
 │   └── skills.json
 ├── docs/
 │   ├── external-agent-submission.md
+│   ├── external-skill-usage.md
 │   ├── internal-proxy-submission.md
 │   ├── internal-operations.md
 │   ├── review-guide.md

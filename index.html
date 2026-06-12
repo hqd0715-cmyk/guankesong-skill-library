@@ -58,20 +58,47 @@
 
       .toolbar {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
+        grid-template-columns: minmax(0, 1fr) minmax(180px, auto) auto;
         gap: 12px;
         padding: 22px 0;
         align-items: center;
       }
 
       input,
-      select {
+      select,
+      button,
+      .button-link {
         min-height: 42px;
         border: 1px solid var(--line);
         border-radius: 6px;
         padding: 0 12px;
         font: inherit;
         background: #fff;
+      }
+
+      button,
+      .button-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      button:hover,
+      .button-link:hover {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+      }
+
+      .catalog-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        color: var(--muted);
+        font-size: 14px;
       }
 
       .grid {
@@ -118,11 +145,35 @@
         padding: 3px 9px;
       }
 
-      .card a {
+      .actions {
         margin-top: auto;
-        color: var(--accent);
-        text-decoration: none;
-        font-weight: 600;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .actions .details {
+        grid-column: 1 / -1;
+      }
+
+      .actions button,
+      .actions .button-link {
+        min-height: 38px;
+        padding: 6px 9px;
+        font-size: 13px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        max-width: min(360px, calc(100% - 36px));
+        border: 1px solid #a8c7fa;
+        border-radius: 6px;
+        padding: 10px 14px;
+        color: #0842a0;
+        background: #edf3ff;
+        box-shadow: 0 8px 24px rgb(32 33 36 / 16%);
       }
 
       .empty {
@@ -133,6 +184,11 @@
       @media (max-width: 640px) {
         .toolbar {
           grid-template-columns: 1fr;
+        }
+
+        .catalog-meta {
+          align-items: flex-start;
+          flex-direction: column;
         }
       }
     </style>
@@ -150,11 +206,19 @@
         <select id="category">
           <option value="">全部分类</option>
         </select>
+        <button id="copy-search-prompt" type="button">复制 Agent 检索提示词</button>
       </section>
+      <div class="catalog-meta">
+        <span id="result-count">正在加载 Skill…</span>
+        <a class="button-link" href="docs/external-skill-usage.md">外部取用指南</a>
+      </div>
       <section id="skills" class="grid" aria-live="polite"></section>
     </main>
+    <div id="toast" class="toast" role="status" hidden></div>
     <script>
       const REPOSITORY = "hqd0715-cmyk/guankesong-skill-library";
+      const REPOSITORY_URL = `https://github.com/${REPOSITORY}`;
+      const INDEX_URL = `https://raw.githubusercontent.com/${REPOSITORY}/main/index/skills.json`;
       const CATEGORY_LABELS = {
         "ai-shock": "AI Shock",
         "ai-professional": "AI + 专业方法论",
@@ -165,6 +229,8 @@
       const skillsEl = document.querySelector("#skills");
       const searchEl = document.querySelector("#search");
       const categoryEl = document.querySelector("#category");
+      const resultCountEl = document.querySelector("#result-count");
+      const toastEl = document.querySelector("#toast");
 
       function renderCategories() {
         const categories = [...new Set(state.skills.map((skill) => skill.category).filter(Boolean))].sort();
@@ -180,8 +246,10 @@
             skill.name,
             skill.title,
             skill.description,
+            skill.category,
             skill.author,
             Array.isArray(skill.tags) ? skill.tags.join(" ") : "",
+            Array.isArray(skill.platforms) ? skill.platforms.join(" ") : "",
             skill.path,
           ]
             .join(" ")
@@ -192,9 +260,13 @@
         if (!filtered.length) {
           skillsEl.className = "empty";
           skillsEl.textContent = state.skills.length ? "没有匹配的 Skill。" : "还没有已合并的 Skill。";
+          resultCountEl.textContent = "0 个匹配结果";
           return;
         }
 
+        resultCountEl.textContent = includeDrafts()
+          ? `${filtered.length} 个 Skill`
+          : `${filtered.length} 个已审核 Skill`;
         skillsEl.className = "grid";
         skillsEl.innerHTML = filtered
           .map(
@@ -209,7 +281,11 @@
                 <p class="description">${escapeHtml(skill.description || "")}</p>
                 <div class="meta">${escapeHtml(platformText(skill.platforms))}</div>
                 <div class="meta">贡献者：${contributorHtml(skill)}</div>
-                <a href="${encodeURI(skill.path)}">查看 SKILL.md</a>
+                <div class="actions">
+                  <a class="button-link details" href="${skillUrl(skill)}" target="_blank" rel="noreferrer">查看完整目录</a>
+                  <button type="button" data-action="codex" data-name="${escapeHtml(skill.name)}">复制 Codex 取用提示词</button>
+                  <button type="button" data-action="claude" data-name="${escapeHtml(skill.name)}">复制 Claude Code 取用提示词</button>
+                </div>
               </article>
             `
           )
@@ -240,6 +316,75 @@
 
       function currentRef() {
         return new URLSearchParams(window.location.search).get("ref") || "main";
+      }
+
+      function includeDrafts() {
+        return new URLSearchParams(window.location.search).get("status") === "all";
+      }
+
+      function skillDirectory(skill) {
+        return String(skill.path || "").replace(/\/SKILL\.md$/, "");
+      }
+
+      function skillUrl(skill) {
+        const path = skillDirectory(skill).split("/").map(encodeURIComponent).join("/");
+        return `${REPOSITORY_URL}/tree/${encodeURIComponent(currentRef())}/${path}`;
+      }
+
+      function installPrompt(skill, client) {
+        const directory = skillDirectory(skill);
+        const destination = client === "codex"
+          ? `$CODEX_HOME/skills/${skill.name}（未设置 CODEX_HOME 时使用 ~/.codex/skills/${skill.name}）`
+          : `~/.claude/skills/${skill.name}`;
+        const installer = client === "codex"
+          ? "优先使用 Codex 内置的 skill-installer；如果不可用，再从 GitHub 下载。"
+          : "从 GitHub 下载该目录即可，不要为了安装一个 Skill 克隆整个仓库。";
+        return `请安装并验证这个 Agent Skill：
+
+名称：${skill.title || skill.name}
+仓库：${REPOSITORY}
+分支：${currentRef()}
+目录：${directory}
+目标：${destination}
+
+${installer}
+必须复制整个 Skill 目录及其 scripts、references、assets 等子目录，不要只复制 SKILL.md。
+安装前确认来源目录中的 SKILL.md 存在；如果目标目录已存在，不要覆盖，先告诉我。
+安装完成后检查目标目录中的 SKILL.md，并告诉我安装路径。最后提醒我重启或重新加载 ${client === "codex" ? "Codex" : "Claude Code"}。`;
+      }
+
+      function searchPrompt() {
+        return `请帮我从莞客松 Skill 共创库检索适合当前任务的 Agent Skill。
+
+索引地址：${INDEX_URL}
+仓库：${REPOSITORY}
+
+先读取索引，只考虑 status 为 reviewed 且 platforms 包含当前客户端的 Skill。
+根据我接下来描述的任务，最多推荐 3 个，并说明名称、适用理由、难度和目录。
+不要立即安装；等我确认具体 Skill 后，再下载完整目录，不能只复制 SKILL.md。
+
+我的任务是：<在这里填写需求>`;
+      }
+
+      async function copyText(text, successMessage) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (error) {
+          const textarea = document.createElement("textarea");
+          textarea.value = text;
+          textarea.style.position = "fixed";
+          textarea.style.opacity = "0";
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          textarea.remove();
+        }
+        toastEl.textContent = successMessage;
+        toastEl.hidden = false;
+        window.clearTimeout(copyText.timeout);
+        copyText.timeout = window.setTimeout(() => {
+          toastEl.hidden = true;
+        }, 2600);
       }
 
       async function fetchJson(url) {
@@ -317,10 +462,18 @@
       }
 
       async function loadSkills() {
+        if (currentRef() === "main") {
+          try {
+            return await loadSkillsFromIndex();
+          } catch (error) {
+            console.warn("Falling back to the repository tree", error);
+            return loadSkillsFromRepository();
+          }
+        }
         try {
           return await loadSkillsFromRepository();
         } catch (error) {
-          console.warn("Falling back to index/skills.json", error);
+          console.warn("Falling back to the main index", error);
           return loadSkillsFromIndex();
         }
       }
@@ -335,9 +488,31 @@
         render();
       });
 
+      document.querySelector("#copy-search-prompt").addEventListener("click", () => {
+        copyText(searchPrompt(), "已复制 Agent 检索提示词");
+      });
+
+      skillsEl.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const skill = state.skills.find((item) => item.name === button.dataset.name);
+        if (!skill) return;
+        const client = button.dataset.action;
+        copyText(
+          installPrompt(skill, client),
+          `已复制 ${client === "codex" ? "Codex" : "Claude Code"} 取用提示词`
+        );
+      });
+
       loadSkills()
         .then((skills) => {
-          state.skills = skills;
+          state.skills = includeDrafts()
+            ? skills
+            : skills.filter(
+                (skill) =>
+                  skill.status === "reviewed" &&
+                  skill.category !== "库维护工具"
+              );
           renderCategories();
           render();
         })
