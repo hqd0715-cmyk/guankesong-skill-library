@@ -1,14 +1,18 @@
 # 莞客松 Skill 共创库
 
-这是莞客松团队用于收集、整理、审核和发布 Agent Skill 的内部知识库。仓库目标是把活动、围炉会、社群交流和真实项目中沉淀的 AI 用法、专业方法论与创意玩法，整理成可检索、可复用、可在 Codex 和 Claude Code 之间迁移的 Skill 包。
+这是莞客松团队用于收集、整理、审核和发布 Agent Skill 的共创知识库。仓库目标是把活动、围炉会、社群交流和真实项目中沉淀的 AI 用法、专业方法论与创意玩法，整理成可检索、可复用、可在 Codex 和 Claude Code 之间迁移的 Skill 包。
 
-本仓库当前不面向外部成员开放自行投稿。外部成员、活动参与者和社群用户可以向莞客松团队提供原始素材，由内部成员统一筛选、标准化并代为录入。
+仓库采用双入口：内部成员代投稿是主要质量通道；外部贡献者也可以让 Claude Code、Codex 或 GitHub CLI 创建标准化 Issue。外部投稿不需要 fork、clone、push 或自行创建 PR。
+
+更准确地说，本库采用“内部整理为主、外部 Agent 投稿为辅”的机制，不是无需审核的开放投稿平台。
 
 ```text
-素材收集 → 内部整理 → 统一代投稿 → 自动生成 Skill → 内部审核 → 合并入库 → 对外展示
+内部素材 → 内部整理 → 内部代投稿 Issue ┐
+                                         ├→ 自动生成 Draft PR → 维护者审核 → CI → 合并
+外部 Skill → Agent 创建标准化 Issue ────┘
 ```
 
-完整团队流程见 [内部操作手册](docs/internal-operations.md)。
+所有自动生成的 PR 都是 Draft，不会自动合并。详见 [内部代投稿指南](docs/internal-proxy-submission.md)、[外部 Agent 投稿指南](docs/external-agent-submission.md) 和 [审核指南](docs/review-guide.md)。
 
 ## 快速开始
 
@@ -99,7 +103,7 @@ Copy-Item -Recurse `
 
 合并正式 Skill 前，应将状态更新为 `reviewed`；确需保留草稿时，应在 PR 中说明原因。
 
-## 内部入库方式
+## 投稿方式
 
 ### 方式一：内部成员代投稿 Issue
 
@@ -110,7 +114,7 @@ Copy-Item -Recurse `
 5. GitHub Actions 会按分类生成 `skills/<category>/<skill-name>/SKILL.md` 和 `skill.json`，并自动创建 Draft PR。
 6. 内部成员审核、修改、刷新索引后合并到 `main`。
 
-Issue 自动化会校验提交者的仓库权限。只有拥有 `write`、`maintain` 或 `admin` 权限的内部成员才能触发 Skill 分支和 Draft PR。
+Issue 自动化会校验 `internal-proxy` 提交者的仓库权限。只有拥有 `write`、`maintain` 或 `admin` 权限的内部成员才能使用这个入口。
 
 ### 方式二：内部成员提交本地 Agent Skill 包
 
@@ -123,16 +127,21 @@ python skills/library-tools/submit-skills/scripts/submit_skills.py --source <你
 
 第二条命令会整理本地标准 Agent Skill 包，把作者信息写入 `skill.json`，刷新索引、创建审核分支，并在本机 GitHub 权限可用时创建 Draft PR。没有传 `--github` 时，脚本会尝试使用当前 `gh` 登录账号。
 
-## 外部素材如何参与
+### 方式三：外部 Agent 创建 Issue
 
-外部素材提供者不需要学习或操作 GitHub。团队可以通过飞书表格、腾讯文档、Notion、问卷、活动记录或微信群收集原始内容。
+外部贡献者可以在 Issues 页面选择 `外部 Agent 投稿`，也可以让 Claude Code 或 Codex 调用 GitHub CLI 创建标题以 `[Skill]` 开头的标准化 Issue。支持：
 
-建议至少收集：
+- `external-claude-code`
+- `external-codex`
+- `external-manual`
 
-```text
-标题、分类、素材来源、原始提供者、适用场景、原始内容、
-整理后步骤、Prompt 示例、案例效果、风险备注、整理负责人、当前状态
-```
+系统会生成 `skill-submission/issue-<编号>` 分支和 Draft PR。外部贡献者没有仓库写权限，也无需接触 Git 分支；维护者负责核查、修改和决定是否合并。
+
+完整命令、正文模板和 Agent 提示词见 [外部 Agent 投稿指南](docs/external-agent-submission.md)。
+
+### 方式四：提供原始素材
+
+不使用 GitHub 的参与者仍可通过团队指定的飞书表格、问卷、活动记录或社群渠道提供原始素材，由内部整理人筛选后代投稿。
 
 网络公开内容只能作为参考素材。入库前应重新组织和改写，并标明来源，避免大段复制原文。
 
@@ -184,17 +193,23 @@ git diff --exit-code index/skills.json
 ├── index/
 │   └── skills.json
 ├── docs/
+│   ├── external-agent-submission.md
+│   ├── internal-proxy-submission.md
 │   ├── internal-operations.md
 │   ├── review-guide.md
-│   └── branch-protection.md
+│   ├── branch-protection.md
+│   └── e2e-test-checklist.md
 ├── scripts/
 │   ├── ingest_issue.py
 │   └── validate_skills.py
 ├── tests/
+│   ├── fixtures/
+│   ├── test_ingest_issue.py
 │   └── test_submit_skills.py
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
-│   │   └── skill_submission.yml
+│   │   ├── internal_proxy_submission.yml
+│   │   └── external_agent_submission.yml
 │   └── workflows/
 │       ├── skill-submission-to-pr.yml
 │       └── validate-repository.yml

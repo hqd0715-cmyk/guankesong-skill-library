@@ -4,11 +4,11 @@
 
 1. 打开 `Settings`。
 2. 进入 `Branches`。
-3. 新建规则，Branch name pattern 填 `main`。
+3. 新建 Ruleset，目标分支选择 `main`。
 4. 开启 `Require a pull request before merging`。
-5. 开启 `Require approvals`，建议至少 1 人审核。
-6. 开启 `Dismiss stale pull request approvals when new commits are pushed`。
-7. 开启 `Require status checks to pass before merging`。
-8. 将 `Validate repository / validate` 设为必需状态检查。
+5. 单人维护仓库将 Required approvals 设为 `0`；GitHub 不会把 PR 作者对自己的 Approve 计入有效批准。
+6. 开启 `Require status checks to pass before merging`。
+7. 将 `Validate repository / validate` 设为必需状态检查。
+8. 开启 `Block force pushes` 和 `Restrict deletions`。
 
-外部成员不需要 GitHub 仓库权限，也不直接通过 GitHub 投稿。默认流程是团队收集素材，由拥有写入权限的内部成员代填 Issue 表单，系统生成 Draft PR 后再由内部成员审核。
+外部成员不需要 GitHub 仓库权限，也不直接 push 或创建 PR。外部 Agent 只创建标准化 Issue；系统使用仓库自身的 `GITHUB_TOKEN` 生成 Draft PR，并由内部成员审核。

@@ -10,7 +10,7 @@ Use this skill when an internal Guankesong maintainer has already collected and 
 ## Workflow
 
 1. Confirm the source folder contains standard skill packages. Each skill package must include `SKILL.md`; its frontmatter must contain only `name` and `description`.
-2. Confirm attribution and provenance. Each skill should have `skill.json.author`, plus `provider`, `source`, `curator`, and `publication_status` for internal proxy submissions. Pass `--author` and `--github` only to override contributor identity when appropriate; do not replace the original provider with the maintainer's account.
+2. Confirm attribution and provenance. Each skill should have `skill.json.author`, plus `source_provider`, `source`, `curator`, `publication_status`, and `submission_type` for internal proxy submissions. Pass `--author` and `--github` only to override contributor identity when appropriate; do not replace the original provider with the maintainer's account.
 3. Confirm the target repository is a local `guankesong-skill-library` checkout and the worktree is clean unless the user explicitly allows `--allow-dirty`.
 4. Run a dry-run first:
 
@@ -45,8 +45,8 @@ python "${CLAUDE_SKILL_DIR:-skills/library-tools/submit-skills}/scripts/submit_s
 - Submit only standard Agent Skill packages. Do not copy temporary files, `.git`, `node_modules`, `__pycache__`, build artifacts, virtual environments, or generated caches into the library.
 - Do not require GitHub CLI for dry-run, copy, validation, or local commit. Treat `gh` as optional and only required for `--create-pr`.
 - Do not submit skills without contributor information. Prefer explicit `--author` and `--github`; use `gh` profile data only as a fallback.
-- Do not use this tool as a public intake endpoint. Raw external material must be screened and standardized by an internal curator before submission.
-- Preserve original provider, source, curator, and publication-review metadata in `skill.json`.
+- Do not use this local-copy tool as the external intake endpoint. External contributors should create standardized Issues; raw material selected for this internal path must be screened by an internal curator.
+- Preserve original `source_provider`, `source`, `curator`, and publication-review metadata in `skill.json`.
 - Do not silently move a skill that already exists under another category. Use `--replace-existing` only when the user explicitly wants to move it.
 - Before push, inspect `git diff --stat` and `git status --short`.
 - If the library worktree has uncommitted changes, stop unless the user explicitly allows `--allow-dirty`.

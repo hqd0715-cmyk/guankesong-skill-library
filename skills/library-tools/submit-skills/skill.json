@@ -3,6 +3,9 @@
   "title": "内部代投稿 Skills",
   "category": "库维护工具",
   "author": "莞客松 Skill 共创库",
+  "source_provider": "莞客松 Skill 共创库",
+  "source": "莞客松 Skill 共创库仓库维护流程",
+  "curator": "莞客松维护者",
   "github": "hqd0715-cmyk",
   "tags": [
     "skill-submission",
@@ -17,5 +20,7 @@
   "platforms": [
     "codex",
     "claude-code"
-  ]
+  ],
+  "publication_status": "已确认适合公开",
+  "submission_type": "internal-proxy"
 }

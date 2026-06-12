@@ -13,6 +13,11 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  actions: write
+
+concurrency:
+  group: skill-submission-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: true
 
 jobs:
   create-skill-pr:
@@ -25,7 +30,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Fetch issue body
+      - name: Fetch issue
         id: issue
         env:
           GH_TOKEN: ${{ github.token }}
@@ -41,77 +46,95 @@ jobs:
           else
             issue_number="$EVENT_ISSUE_NUMBER"
           fi
+          if [[ ! "$issue_number" =~ ^[0-9]+$ ]]; then
+            echo "::error::Issue number must contain digits only"
+            exit 1
+          fi
 
           echo "Fetching issue #${issue_number} from ${GITHUB_REPOSITORY}"
-          issue_title="$(gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" --json title --jq '.title')"
-          issue_author="$(gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" --json author --jq '.author.login')"
-          gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" --json body --jq '.body // ""' > issue-body.md
+          gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" \
+            --json title --jq '.title' > issue-title.txt
+          gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" \
+            --json body --jq '.body // ""' > issue-body.md
+          issue_author="$(
+            gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" \
+              --json author --jq '.author.login'
+          )"
 
           echo "number=${issue_number}" >> "$GITHUB_OUTPUT"
           echo "author=${issue_author}" >> "$GITHUB_OUTPUT"
-          echo "body_path=issue-body.md" >> "$GITHUB_OUTPUT"
-          {
-            echo "title<<EOF"
-            echo "$issue_title"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
 
-      - name: Authorize internal submitter
+      - name: Classify and authorize submission
         id: authorization
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_AUTHOR: ${{ steps.issue.outputs.author }}
-          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
         shell: bash
         run: |
           set -euo pipefail
 
-          permission="$(
-            gh api "repos/${GITHUB_REPOSITORY}/collaborators/${ISSUE_AUTHOR}/permission" \
-              --jq '.permission' 2>/dev/null || echo "none"
+          submission_type="$(
+            python scripts/ingest_issue.py \
+              --issue-body-file issue-body.md \
+              --print-field submission_type
           )"
+          echo "submission_type=${submission_type}" >> "$GITHUB_OUTPUT"
 
-          case "$permission" in
-            admin|maintain|write)
+          case "$submission_type" in
+            internal-proxy)
+              permission="$(
+                gh api "repos/${GITHUB_REPOSITORY}/collaborators/${ISSUE_AUTHOR}/permission" \
+                  --jq '.permission' 2>/dev/null || echo "none"
+              )"
+              case "$permission" in
+                admin|maintain|write)
+                  echo "authorized=true" >> "$GITHUB_OUTPUT"
+                  echo "Authorized internal submitter: ${ISSUE_AUTHOR} (${permission})"
+                  ;;
+                *)
+                  echo "::error::internal-proxy requires write, maintain, or admin permission"
+                  exit 1
+                  ;;
+              esac
+              ;;
+            external-claude-code|external-codex|external-manual)
               echo "authorized=true" >> "$GITHUB_OUTPUT"
-              echo "Authorized internal submitter: ${ISSUE_AUTHOR} (${permission})"
+              echo "Authorized external Issue submission: ${ISSUE_AUTHOR} (${submission_type})"
               ;;
             *)
-              echo "authorized=false" >> "$GITHUB_OUTPUT"
-              echo "Issue author ${ISSUE_AUTHOR} does not have internal write permission."
-              gh issue comment "$ISSUE_NUMBER" \
-                --repo "$GITHUB_REPOSITORY" \
-                --body "当前仓库采用莞客松内部代投稿流程。该 Issue 不会自动生成 Skill 或 Pull Request；请先把素材交给莞客松内部整理人统一处理。"
+              echo "::error::Unsupported submission type: ${submission_type}"
+              exit 1
               ;;
           esac
 
-      - name: Generate skill file
-        if: steps.authorization.outputs.authorized == 'true'
+      - name: Generate skill package
+        env:
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          ISSUE_AUTHOR: ${{ steps.issue.outputs.author }}
         run: |
           python scripts/ingest_issue.py \
-            --issue-number "${{ steps.issue.outputs.number }}" \
-            --issue-title "${{ steps.issue.outputs.title }}" \
+            --issue-number "$ISSUE_NUMBER" \
+            --issue-title-file issue-title.txt \
+            --issue-author "$ISSUE_AUTHOR" \
             --issue-body-file issue-body.md
 
       - name: Validate skill packages
-        if: steps.authorization.outputs.authorized == 'true'
-        run: |
-          python scripts/validate_skills.py
+        run: python scripts/validate_skills.py
 
       - name: Show generated changes
-        if: steps.authorization.outputs.authorized == 'true'
         run: |
           git status --short
           git diff --stat
 
       - name: Commit and push skill branch
-        if: steps.authorization.outputs.authorized == 'true'
         id: skill_branch
+        env:
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
         shell: bash
         run: |
           set -euo pipefail
 
-          branch="skill-submission/issue-${{ steps.issue.outputs.number }}"
+          branch="skill-submission/issue-${ISSUE_NUMBER}"
           echo "branch=${branch}" >> "$GITHUB_OUTPUT"
 
           git config user.name "github-actions[bot]"
@@ -126,42 +149,55 @@ jobs:
           fi
 
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          timestamp="$(TZ=America/New_York date '+%Y-%m-%d %H:%M')"
-          git commit -m "${timestamp}｜生成 issue #${{ steps.issue.outputs.number }} 的 Skill 投稿包"
+          timestamp="$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M')"
+          git commit -m "${timestamp}｜生成 issue #${ISSUE_NUMBER} 的 Skill 投稿包"
           git push --force origin "$branch"
           git ls-remote --heads origin "$branch"
 
-      - name: Create draft PR
+      - name: Create or update draft PR
         if: steps.skill_branch.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.skill_branch.outputs.branch }}
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          SUBMISSION_TYPE: ${{ steps.authorization.outputs.submission_type }}
           REPOSITORY_OWNER: ${{ github.repository_owner }}
         shell: bash
         run: |
           set -euo pipefail
 
-          title="内部代投稿 Skill #${ISSUE_NUMBER}"
-          body="This draft PR was generated from internal proxy-submission issue #${ISSUE_NUMBER}.
+          title="Skill 投稿 #${ISSUE_NUMBER} (${SUBMISSION_TYPE})"
+          body="This draft PR was generated from issue #${ISSUE_NUMBER}.
 
-          Internal reviewers should verify Agent Skill structure, Codex/Claude Code compatibility, attribution, source, publication status, classification, quality, originality, and formatting before marking it ready."
+          Submission type: \`${SUBMISSION_TYPE}\`
 
-          echo "Repository: ${GITHUB_REPOSITORY}"
-          echo "Base: main"
-          echo "Head: ${REPOSITORY_OWNER}:${BRANCH}"
-          gh --version
-          gh pr list --base main --head "${REPOSITORY_OWNER}:${BRANCH}" --state open --json url --jq '.[0].url // ""'
+          Maintainers must verify Agent Skill structure, Codex/Claude Code compatibility, attribution, source, publication status, classification, quality, originality, and formatting before marking it ready."
 
-          existing_url="$(gh pr list --base main --head "${REPOSITORY_OWNER}:${BRANCH}" --state open --json url --jq '.[0].url // ""')"
-          if [ -n "$existing_url" ]; then
-            echo "Draft PR already exists: $existing_url"
-            exit 0
+          existing_number="$(
+            gh pr list \
+              --base main \
+              --head "${REPOSITORY_OWNER}:${BRANCH}" \
+              --state open \
+              --json number \
+              --jq '.[0].number // ""'
+          )"
+          if [ -n "$existing_number" ]; then
+            gh api \
+              --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/pulls/${existing_number}" \
+              -f title="$title" \
+              -f body="$body" \
+              >/dev/null
+            echo "Updated Draft PR #${existing_number}"
+          else
+            gh pr create \
+              --draft \
+              --base main \
+              --head "${REPOSITORY_OWNER}:${BRANCH}" \
+              --title "$title" \
+              --body "$body"
           fi
 
-          gh pr create \
-            --draft \
-            --base main \
-            --head "${REPOSITORY_OWNER}:${BRANCH}" \
-            --title "$title" \
-            --body "$body"
+          # Pull requests created with GITHUB_TOKEN do not emit a pull_request
+          # event. Dispatch validation explicitly against the generated branch.
+          gh workflow run validate-repository.yml --ref "$BRANCH"
