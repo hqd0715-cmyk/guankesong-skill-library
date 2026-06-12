@@ -1,6 +1,14 @@
 # 莞客松 Skill 共创库
 
-这是一个面向外部成员投稿、内部成员审核整理的 Agent Skill 共创库。仓库目标是把大家沉淀下来的 AI 用法、专业方法论和有趣玩法，整理成可检索、可复用、可在 Codex 和 Claude Code 之间迁移的 skill 包。
+这是莞客松团队用于收集、整理、审核和发布 Agent Skill 的内部知识库。仓库目标是把活动、围炉会、社群交流和真实项目中沉淀的 AI 用法、专业方法论与创意玩法，整理成可检索、可复用、可在 Codex 和 Claude Code 之间迁移的 Skill 包。
+
+本仓库当前不面向外部成员开放自行投稿。外部成员、活动参与者和社群用户可以向莞客松团队提供原始素材，由内部成员统一筛选、标准化并代为录入。
+
+```text
+素材收集 → 内部整理 → 统一代投稿 → 自动生成 Skill → 内部审核 → 合并入库 → 对外展示
+```
+
+完整团队流程见 [内部操作手册](docs/internal-operations.md)。
 
 ## 快速开始
 
@@ -91,17 +99,20 @@ Copy-Item -Recurse `
 
 合并正式 Skill 前，应将状态更新为 `reviewed`；确需保留草稿时，应在 PR 中说明原因。
 
-## 投稿方式
+## 内部入库方式
 
-### 方式一：Issue 投稿
+### 方式一：内部成员代投稿 Issue
 
-1. 进入仓库 Issues 页面。
-2. 选择 `Skill 投稿` 表单。
-3. 填写标题、分类、作者、标签、适用场景、步骤、Prompt 和案例。
-4. GitHub Actions 会按分类生成 `skills/<category>/<skill-name>/SKILL.md` 和 `skill.json`，并自动创建 Draft PR。
-5. 内部成员审核、修改、刷新索引后合并到 `main`。
+1. 先从活动、群聊、访谈、问卷或飞书文档中收集素材。
+2. 由整理人完成筛选、去重、改写、风险检查和格式标准化。
+3. 内部成员进入仓库 Issues 页面，选择 `内部 Skill 代投稿` 表单。
+4. 填写标题、分类、原始提供者、素材来源、整理人、适用场景、步骤、Prompt 和案例。
+5. GitHub Actions 会按分类生成 `skills/<category>/<skill-name>/SKILL.md` 和 `skill.json`，并自动创建 Draft PR。
+6. 内部成员审核、修改、刷新索引后合并到 `main`。
 
-### 方式二：本地 Agent Skill 包投稿
+Issue 自动化会校验提交者的仓库权限。只有拥有 `write`、`maintain` 或 `admin` 权限的内部成员才能触发 Skill 分支和 Draft PR。
+
+### 方式二：内部成员提交本地 Agent Skill 包
 
 仓库内置 `submit-skills`：
 
@@ -111,6 +122,19 @@ python skills/library-tools/submit-skills/scripts/submit_skills.py --source <你
 ```
 
 第二条命令会整理本地标准 Agent Skill 包，把作者信息写入 `skill.json`，刷新索引、创建审核分支，并在本机 GitHub 权限可用时创建 Draft PR。没有传 `--github` 时，脚本会尝试使用当前 `gh` 登录账号。
+
+## 外部素材如何参与
+
+外部素材提供者不需要学习或操作 GitHub。团队可以通过飞书表格、腾讯文档、Notion、问卷、活动记录或微信群收集原始内容。
+
+建议至少收集：
+
+```text
+标题、分类、素材来源、原始提供者、适用场景、原始内容、
+整理后步骤、Prompt 示例、案例效果、风险备注、整理负责人、当前状态
+```
+
+网络公开内容只能作为参考素材。入库前应重新组织和改写，并标明来源，避免大段复制原文。
 
 ## 本地维护
 
@@ -160,6 +184,9 @@ git diff --exit-code index/skills.json
 ├── index/
 │   └── skills.json
 ├── docs/
+│   ├── internal-operations.md
+│   ├── review-guide.md
+│   └── branch-protection.md
 ├── scripts/
 │   ├── ingest_issue.py
 │   └── validate_skills.py

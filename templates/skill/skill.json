@@ -3,6 +3,9 @@
   "title": "Skill 标题",
   "category": "AI Shock",
   "author": "",
+  "provider": "",
+  "source": "",
+  "curator": "",
   "github": "",
   "tags": [],
   "status": "draft",
@@ -12,5 +15,7 @@
   "platforms": [
     "codex",
     "claude-code"
-  ]
+  ],
+  "publication_status": "",
+  "submission_mode": "internal-proxy"
 }

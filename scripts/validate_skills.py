@@ -14,6 +14,7 @@ VALID_CATEGORY_DIRS = {
 }
 VALID_CATEGORIES = {*VALID_CATEGORY_DIRS, ""}
 RESERVED_NAME_PARTS = {"anthropic", "claude"}
+VALID_PUBLICATION_STATUSES = {"", "已确认适合公开", "需进一步核查"}
 
 
 def parse_frontmatter(path: Path) -> tuple[dict, set[str]]:
@@ -86,6 +87,22 @@ def validate_skill(skill_dir: Path, skills_root: Path) -> list[str]:
             errors.append(f"{metadata_file}: unsupported category '{metadata.get('category')}'")
         if not str(metadata.get("author", "")).strip():
             errors.append(f"{metadata_file}: author is required")
+        for field in ("provider", "source", "curator", "publication_status", "submission_mode"):
+            if field in metadata and not isinstance(metadata[field], str):
+                errors.append(f"{metadata_file}: {field} must be a string")
+        if metadata.get("publication_status", "") not in VALID_PUBLICATION_STATUSES:
+            errors.append(f"{metadata_file}: unsupported publication_status '{metadata.get('publication_status')}'")
+        if metadata.get("submission_mode") == "internal-proxy":
+            for field in ("provider", "source", "curator", "publication_status"):
+                if not str(metadata.get(field, "")).strip():
+                    errors.append(f"{metadata_file}: {field} is required for internal proxy submissions")
+            if (
+                metadata.get("status") == "reviewed"
+                and metadata.get("publication_status") != "已确认适合公开"
+            ):
+                errors.append(
+                    f"{metadata_file}: reviewed internal proxy submissions must be confirmed suitable for publication"
+                )
         expected_category_dir = VALID_CATEGORY_DIRS.get(metadata.get("category", ""))
         if expected_category_dir and skill_dir.parent.name != expected_category_dir:
             errors.append(

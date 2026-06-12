@@ -1,6 +1,6 @@
 {
   "name": "submit-skills",
-  "title": "投稿 Skills",
+  "title": "内部代投稿 Skills",
   "category": "库维护工具",
   "author": "莞客松 Skill 共创库",
   "github": "hqd0715-cmyk",
@@ -12,7 +12,7 @@
   ],
   "status": "reviewed",
   "created": "2026-06-03",
-  "updated": "2026-06-04",
+  "updated": "2026-06-12",
   "difficulty": "intermediate",
   "platforms": [
     "codex",

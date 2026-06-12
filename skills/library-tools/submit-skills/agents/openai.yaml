@@ -1,4 +1,4 @@
 interface:
-  display_name: "投稿 Skills"
-  short_description: "整理本地 Agent Skills 并提交到共创库审核分支。"
+  display_name: "内部代投稿 Skills"
+  short_description: "整理内部已筛选的 Agent Skills 并提交到共创库审核分支。"
   default_prompt: "Use $submit-skills to dry-run, validate, copy, and commit local skills into the Guankesong Skill Library review branch."
