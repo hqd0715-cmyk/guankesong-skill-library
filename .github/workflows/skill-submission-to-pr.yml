@@ -44,9 +44,11 @@ jobs:
 
           echo "Fetching issue #${issue_number} from ${GITHUB_REPOSITORY}"
           issue_title="$(gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" --json title --jq '.title')"
+          issue_author="$(gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" --json author --jq '.author.login')"
           gh issue view "$issue_number" --repo "$GITHUB_REPOSITORY" --json body --jq '.body // ""' > issue-body.md
 
           echo "number=${issue_number}" >> "$GITHUB_OUTPUT"
+          echo "author=${issue_author}" >> "$GITHUB_OUTPUT"
           echo "body_path=issue-body.md" >> "$GITHUB_OUTPUT"
           {
             echo "title<<EOF"
@@ -54,7 +56,37 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Authorize internal submitter
+        id: authorization
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_AUTHOR: ${{ steps.issue.outputs.author }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          permission="$(
+            gh api "repos/${GITHUB_REPOSITORY}/collaborators/${ISSUE_AUTHOR}/permission" \
+              --jq '.permission' 2>/dev/null || echo "none"
+          )"
+
+          case "$permission" in
+            admin|maintain|write)
+              echo "authorized=true" >> "$GITHUB_OUTPUT"
+              echo "Authorized internal submitter: ${ISSUE_AUTHOR} (${permission})"
+              ;;
+            *)
+              echo "authorized=false" >> "$GITHUB_OUTPUT"
+              echo "Issue author ${ISSUE_AUTHOR} does not have internal write permission."
+              gh issue comment "$ISSUE_NUMBER" \
+                --repo "$GITHUB_REPOSITORY" \
+                --body "当前仓库采用莞客松内部代投稿流程。该 Issue 不会自动生成 Skill 或 Pull Request；请先把素材交给莞客松内部整理人统一处理。"
+              ;;
+          esac
+
       - name: Generate skill file
+        if: steps.authorization.outputs.authorized == 'true'
         run: |
           python scripts/ingest_issue.py \
             --issue-number "${{ steps.issue.outputs.number }}" \
@@ -62,15 +94,18 @@ jobs:
             --issue-body-file issue-body.md
 
       - name: Validate skill packages
+        if: steps.authorization.outputs.authorized == 'true'
         run: |
           python scripts/validate_skills.py
 
       - name: Show generated changes
+        if: steps.authorization.outputs.authorized == 'true'
         run: |
           git status --short
           git diff --stat
 
       - name: Commit and push skill branch
+        if: steps.authorization.outputs.authorized == 'true'
         id: skill_branch
         shell: bash
         run: |
@@ -107,10 +142,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          title="投稿 Skill #${ISSUE_NUMBER}"
-          body="This draft PR was generated from issue #${ISSUE_NUMBER}.
+          title="内部代投稿 Skill #${ISSUE_NUMBER}"
+          body="This draft PR was generated from internal proxy-submission issue #${ISSUE_NUMBER}.
 
-          Internal reviewers should verify Agent Skill structure, Codex/Claude Code compatibility, classification, quality, originality, and formatting before marking it ready."
+          Internal reviewers should verify Agent Skill structure, Codex/Claude Code compatibility, attribution, source, publication status, classification, quality, originality, and formatting before marking it ready."
 
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Base: main"

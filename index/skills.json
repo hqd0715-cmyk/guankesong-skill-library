@@ -96,8 +96,8 @@
   },
   {
     "name": "submit-skills",
-    "title": "投稿 Skills",
-    "description": "Organize local Agent Skill packages and submit them to the Guankesong Skill Library review branch. Use when the user asks to submit, contribute, publish, push, import, or organize local Codex or Claude Code skills for review in this GitHub skill library. Basic dry-run, copy, validate, and commit steps do not require GitHub CLI; only Draft PR creation requires gh.",
+    "title": "内部代投稿 Skills",
+    "description": "Organize internally curated Agent Skill packages and submit them to the Guankesong Skill Library review branch. Use when a Guankesong maintainer asks to proxy-submit, import, publish, push, or organize local Codex or Claude Code skills for internal review. Basic dry-run, copy, validate, and commit steps do not require GitHub CLI; only Draft PR creation requires gh.",
     "category": "库维护工具",
     "author": "莞客松 Skill 共创库",
     "github": "hqd0715-cmyk",

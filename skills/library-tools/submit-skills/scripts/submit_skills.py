@@ -345,9 +345,9 @@ def main() -> int:
                     "--head",
                     args.branch,
                     "--title",
-                    f"投稿 Skill：{args.branch}",
+                    f"内部代投稿 Skill：{args.branch}",
                     "--body",
-                    "由 submit-skills 自动整理并提交，等待维护者审核。",
+                    "由莞客松内部整理人使用 submit-skills 代为提交，等待维护者审核来源、署名、公开状态和 Skill 质量。",
                 ],
                 cwd=repo_dir,
             )

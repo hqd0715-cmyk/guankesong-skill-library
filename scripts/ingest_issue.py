@@ -19,6 +19,10 @@ FIELD_ALIASES = {
     "Skill 英文 ID": "name",
     "分类": "category",
     "作者": "author",
+    "作者 / 公开署名": "author",
+    "原始提供者": "provider",
+    "素材来源": "source",
+    "整理人": "curator",
     "GitHub 用户名": "github",
     "标签": "tags",
     "难度": "difficulty",
@@ -27,6 +31,7 @@ FIELD_ALIASES = {
     "Prompt 示例": "prompt",
     "注意事项": "notes",
     "案例": "example",
+    "公开状态": "publication_status",
 }
 
 
@@ -149,6 +154,9 @@ def metadata_json(skill_id: str, fields: dict, issue_number: str | None) -> dict
         "title": clean_value(fields.get("title", "未命名 Skill")) or "未命名 Skill",
         "category": category,
         "author": clean_value(fields.get("author", "")),
+        "provider": clean_value(fields.get("provider", "")),
+        "source": clean_value(fields.get("source", "")),
+        "curator": clean_value(fields.get("curator", "")),
         "github": clean_value(fields.get("github", "")),
         "tags": split_tags(clean_value(fields.get("tags", ""))),
         "status": "draft",
@@ -156,6 +164,8 @@ def metadata_json(skill_id: str, fields: dict, issue_number: str | None) -> dict
         "updated": today,
         "difficulty": clean_value(fields.get("difficulty", "beginner")) or "beginner",
         "platforms": ["codex", "claude-code"],
+        "publication_status": clean_value(fields.get("publication_status", "")),
+        "submission_mode": "internal-proxy",
     }
     if issue_number:
         data["source_issue"] = int(issue_number) if issue_number.isdigit() else issue_number

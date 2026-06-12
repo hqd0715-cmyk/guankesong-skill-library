@@ -11,4 +11,4 @@
 7. 开启 `Require status checks to pass before merging`。
 8. 将 `Validate repository / validate` 设为必需状态检查。
 
-外部成员不需要直接写入权限。默认投稿路径是 Issue 表单，系统生成 Draft PR 后由内部成员审核。
+外部成员不需要 GitHub 仓库权限，也不直接通过 GitHub 投稿。默认流程是团队收集素材，由拥有写入权限的内部成员代填 Issue 表单，系统生成 Draft PR 后再由内部成员审核。
