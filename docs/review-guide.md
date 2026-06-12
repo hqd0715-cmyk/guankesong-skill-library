@@ -12,6 +12,8 @@
 8. Prompt 是否可直接复制：占位符、变量和输入输出要求要明确。
 9. 是否存在重复：搜索 `skills/` 和 `index/skills.json`，避免同类内容重复沉淀。
 10. 是否适合公开：确认没有隐私信息、内部资料、未授权搬运内容。
+11. 状态是否正确：正式合并的 Skill 应将 `skill.json.status` 设为 `reviewed`；保留 `draft` 必须有明确原因。
+12. 索引是否同步：重新生成 `index/skills.json` 后不应再出现未提交差异。
 
 ## PR 处理建议
 
@@ -26,7 +28,9 @@
 ```bash
 python scripts/ingest_issue.py --rebuild-index
 python scripts/validate_skills.py
+python -m unittest discover -s tests -p "test_*.py"
 git diff --check
+git diff --exit-code index/skills.json
 ```
 
-合并后可以把 `skill.json` 中的 `status` 从 `draft` 改为 `reviewed`。
+PR 的 `Validate repository` 检查必须通过。除明确保留的草稿外，应在合并前把 `skill.json.status` 从 `draft` 改为 `reviewed`。

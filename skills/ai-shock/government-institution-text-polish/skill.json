@@ -16,9 +16,9 @@
     "writing-assistant",
     "ai-workflow"
   ],
-  "status": "draft",
+  "status": "reviewed",
   "created": "2026-06-02",
-  "updated": "2026-06-02",
+  "updated": "2026-06-11",
   "difficulty": "beginner",
   "platforms": [
     "codex",

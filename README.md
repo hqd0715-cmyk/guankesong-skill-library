@@ -2,6 +2,15 @@
 
 这是一个面向外部成员投稿、内部成员审核整理的 Agent Skill 共创库。仓库目标是把大家沉淀下来的 AI 用法、专业方法论和有趣玩法，整理成可检索、可复用、可在 Codex 和 Claude Code 之间迁移的 skill 包。
 
+## 快速开始
+
+1. 在 `index/skills.json`、仓库目录或 GitHub Pages 展示页中找到需要的 Skill。
+2. 复制整个 `skills/<category>/<skill-name>/` 目录到对应客户端的 skills 目录。
+3. 重启或重新加载客户端。
+4. 在请求中直接描述任务；需要强制触发时，可明确写出 Skill 名称。
+
+不要只复制 `SKILL.md`。Skill 可能依赖同目录下的 `scripts/`、`references/`、`assets/` 或 `agents/`。
+
 ## Skill 包结构
 
 每个 skill 必须放在对应大类目录下：
@@ -40,10 +49,29 @@ description: "说明这个 skill 做什么，以及什么时候使用。"
 - `scripts/`、`references/`、`assets/` 等资源目录可以按需存在。
 - Claude Code 专属字段和本库索引字段不要写进 `SKILL.md`；索引信息放进 `skill.json`。
 
-Claude Code 加载方式：
+### Codex 安装
 
-- 复制单个 skill 包，例如 `skills/ai-professional/your-skill-name/`，到 `~/.claude/skills/your-skill-name/` 或项目 `.claude/skills/your-skill-name/`。
-- 共创库内部保留大类目录，便于审核和检索；安装到 Claude Code 时只复制具体 skill 目录，不复制大类目录。
+复制具体 Skill 目录到：
+
+- 用户级：`$CODEX_HOME/skills/<skill-name>/`
+- 未设置 `CODEX_HOME` 时：`~/.codex/skills/<skill-name>/`
+
+Windows PowerShell 示例：
+
+```powershell
+Copy-Item -Recurse `
+  .\skills\ai-shock\wechat-official-account-writer `
+  "$HOME\.codex\skills\wechat-official-account-writer"
+```
+
+### Claude Code 安装
+
+复制具体 Skill 目录到：
+
+- 用户级：`~/.claude/skills/<skill-name>/`
+- 项目级：`.claude/skills/<skill-name>/`
+
+共创库内部保留大类目录用于审核和检索；安装时只复制具体 Skill 目录，不复制 `ai-shock` 等分类目录。
 
 ## 分类
 
@@ -53,6 +81,15 @@ Claude Code 加载方式：
 | AI + 专业方法论 | AI + 活动策划、能源动力、简历优化、数据分析等专业工作流 |
 | 整活 Skill | 表情包、海报、小游戏、视频脚本、创意玩法 |
 | 库维护工具 | 投稿、校验、索引等仓库维护 skill |
+
+## 审核状态
+
+`skill.json.status` 表示仓库审核状态：
+
+- `draft`：自动生成或仍待补充，不能视为稳定推荐。
+- `reviewed`：已由维护者检查结构、内容与公开合规性。
+
+合并正式 Skill 前，应将状态更新为 `reviewed`；确需保留草稿时，应在 PR 中说明原因。
 
 ## 投稿方式
 
@@ -89,13 +126,23 @@ python scripts/ingest_issue.py --rebuild-index
 python scripts/validate_skills.py
 ```
 
+运行回归测试：
+
+```bash
+python -m unittest discover -s tests -p "test_*.py"
+```
+
 合并前建议执行：
 
 ```bash
 python scripts/ingest_issue.py --rebuild-index
 python scripts/validate_skills.py
+python -m unittest discover -s tests -p "test_*.py"
 git diff --check
+git diff --exit-code index/skills.json
 ```
+
+普通 Pull Request 会由 `.github/workflows/validate-repository.yml` 自动执行同类检查。索引未刷新、Skill 结构不合法、测试失败或存在空白错误时，PR 校验会失败。
 
 ## 文件结构
 
@@ -116,11 +163,14 @@ git diff --check
 ├── scripts/
 │   ├── ingest_issue.py
 │   └── validate_skills.py
+├── tests/
+│   └── test_submit_skills.py
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   └── skill_submission.yml
 │   └── workflows/
-│       └── skill-submission-to-pr.yml
+│       ├── skill-submission-to-pr.yml
+│       └── validate-repository.yml
 ├── index.html
 └── README.md
 ```
@@ -137,3 +187,7 @@ git diff --check
 2. 打开 `Pages`。
 3. Source 选择 `Deploy from a branch`。
 4. Branch 选择 `main`，目录选择 `/root`。
+
+启用后默认地址为：
+
+`https://hqd0715-cmyk.github.io/guankesong-skill-library/`
