@@ -1,24 +1,5 @@
 [
   {
-    "name": "1",
-    "title": "1",
-    "description": "历史 Issue #4 生成的 AI + 专业方法论草稿。用于保留原投稿内容，等待作者或审核者补齐真实标题、场景、步骤和 Prompt。",
-    "category": "AI + 专业方法论",
-    "author": "1",
-    "github": "",
-    "tags": [
-      "1"
-    ],
-    "difficulty": "beginner",
-    "status": "draft",
-    "platforms": [
-      "codex",
-      "claude-code"
-    ],
-    "path": "skills/ai-professional/1/SKILL.md",
-    "metadata_path": "skills/ai-professional/1/skill.json"
-  },
-  {
     "name": "adversarial-review",
     "title": "对抗性审查",
     "description": "用于对当前关键调用链提出系统稳定性失败假设并有目的地深入调查时使用。当需要针对调用契约、边界输入、状态机转换、异步链路、一致性和幂等性等问题进行假设驱动审查时触发。核心场景：宏观审查派发调查任务后的深入验证、接手遗留代码的稳定性风险评估、重构后的回归验证。注意：这不是安全漏洞审计，而是系统代码稳定性和边界情况的假设式调查。",
@@ -32,7 +13,7 @@
       "agent-workflow"
     ],
     "difficulty": "advanced",
-    "status": "draft",
+    "status": "reviewed",
     "platforms": [
       "codex",
       "claude-code"
@@ -54,7 +35,7 @@
       "agent-workflow"
     ],
     "difficulty": "advanced",
-    "status": "draft",
+    "status": "reviewed",
     "platforms": [
       "codex",
       "claude-code"
@@ -82,7 +63,7 @@
       "ai-workflow"
     ],
     "difficulty": "beginner",
-    "status": "draft",
+    "status": "reviewed",
     "platforms": [
       "codex",
       "claude-code"
@@ -105,7 +86,7 @@
       "fact-checking"
     ],
     "difficulty": "beginner",
-    "status": "draft",
+    "status": "reviewed",
     "platforms": [
       "codex",
       "claude-code"

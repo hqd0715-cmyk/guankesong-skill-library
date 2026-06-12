@@ -10,9 +10,9 @@
     "failure-hypothesis",
     "agent-workflow"
   ],
-  "status": "draft",
+  "status": "reviewed",
   "created": "2026-06-03",
-  "updated": "2026-06-03",
+  "updated": "2026-06-11",
   "difficulty": "advanced",
   "platforms": [
     "codex",

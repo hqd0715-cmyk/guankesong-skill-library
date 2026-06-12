@@ -1,0 +1,43 @@
+name: Validate repository
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate skill packages
+        run: python scripts/validate_skills.py
+
+      - name: Run regression tests
+        run: python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Verify generated index
+        run: |
+          python scripts/ingest_issue.py --rebuild-index
+          git diff --exit-code -- index/skills.json
+
+      - name: Check whitespace errors
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --check "origin/${{ github.base_ref }}...HEAD"
+          else
+            git diff --check HEAD^ HEAD
+          fi
