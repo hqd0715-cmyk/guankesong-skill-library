@@ -44,6 +44,28 @@
     "metadata_path": "skills/ai-professional/macro-chain-review/skill.json"
   },
   {
+    "name": "meeting-notes-helper-test",
+    "title": "AI 会议纪要整理助手",
+    "description": "AI 会议纪要整理助手。用于适合在会议、围炉会、项目讨论、活动复盘结束后,把零散记录、聊天记录或语音转文字稿整理成结构清晰的会议纪要、任务清单和后续行动安排。。关键词：会议纪要, ChatGPT, 效率工具, 测试。Use when the user asks for this workflow, prompt pattern, or reusable AI skill.",
+    "category": "AI + 专业方法论",
+    "author": "莞客松测试",
+    "github": "hqd0715-cmyk",
+    "tags": [
+      "会议纪要",
+      "ChatGPT",
+      "效率工具",
+      "测试"
+    ],
+    "difficulty": "beginner",
+    "status": "draft",
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/ai-professional/meeting-notes-helper-test/SKILL.md",
+    "metadata_path": "skills/ai-professional/meeting-notes-helper-test/skill.json"
+  },
+  {
     "name": "government-institution-text-polish",
     "title": "机构介绍的文本润色",
     "description": "机构介绍、单位简介、部门职能、公文类文本润色工作流。Use when the user asks to rewrite Chinese institutional, government, public-sector, or official-document copy so it sounds precise, grounded, and less AI-generated.",
