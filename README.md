@@ -12,7 +12,7 @@
 外部 Skill → Agent 创建标准化 Issue ────┘
 ```
 
-所有自动生成的 PR 都是 Draft，不会自动合并。详见 [内部代投稿指南](docs/internal-proxy-submission.md)、[外部 Agent 投稿指南](docs/external-agent-submission.md) 和 [审核指南](docs/review-guide.md)。
+所有自动生成的 PR 都是 Draft，不会自动合并。第一次使用请先看 [内部与外部操作手册](docs/operations-handbook.md)；专题细节见 [内部代投稿指南](docs/internal-proxy-submission.md)、[外部 Agent 投稿指南](docs/external-agent-submission.md) 和 [审核指南](docs/review-guide.md)。
 
 ## 快速开始
 
@@ -196,6 +196,7 @@ git diff --exit-code index/skills.json
 ├── index/
 │   └── skills.json
 ├── docs/
+│   ├── operations-handbook.md
 │   ├── external-agent-submission.md
 │   ├── external-skill-usage.md
 │   ├── internal-proxy-submission.md
@@ -223,7 +224,7 @@ git diff --exit-code index/skills.json
 
 ## GitHub Pages
 
-仓库内置轻量展示页 `index.html`，会优先通过 GitHub API 实时读取 `skills/<category>/<skill-name>/SKILL.md` 和 `skill.json`，失败时回退到 `index/skills.json`。默认读取 `main` 分支，也可以用 `?ref=<branch>` 预览其他分支，例如 `?ref=rebuild-standard-skill-library`。
+仓库内置轻量展示页 `index.html`。默认读取 `main` 时会优先加载 `index/skills.json`，减少 GitHub API 限流；使用 `?ref=<branch>` 预览其他分支时，会通过 GitHub API 实时读取 `skills/<category>/<skill-name>/SKILL.md` 和 `skill.json`。
 
 `index/skills.json` 仍建议保留并随投稿刷新，作为 GitHub API 限流、网络失败或本地静态预览时的兜底数据。
 
