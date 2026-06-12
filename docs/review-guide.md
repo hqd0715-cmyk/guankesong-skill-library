@@ -1,6 +1,6 @@
 # Skill 审核指南
 
-内部成员审核自动生成的 Draft PR 时，优先检查这几件事：
+内部成员审核内部代投或外部 Agent 投稿生成的 Draft PR 时，优先检查这几件事：
 
 1. 结构是否标准：每个 Agent Skill 必须位于 `skills/<category>/<skill-name>/SKILL.md`。
 2. frontmatter 是否干净：`SKILL.md` 只允许 `name` 和 `description`。
@@ -14,8 +14,9 @@
 10. 是否适合公开：确认没有隐私信息、内部资料、未授权搬运内容。
 11. 状态是否正确：正式合并的 Skill 应将 `skill.json.status` 设为 `reviewed`；保留 `draft` 必须有明确原因。
 12. 索引是否同步：重新生成 `index/skills.json` 后不应再出现未提交差异。
-13. 来源是否清楚：代投稿内容应填写原始提供者、素材来源和整理人。
+13. 来源是否清楚：检查 `source_provider`、`source` 和 `curator`；外部草稿缺失时应在合并前补充或明确标记。
 14. 是否经过授权：公开案例不得泄露隐私，不得大段搬运未授权内容。
+15. 投稿类型是否可信：`internal-proxy` 必须来自内部写权限账号；外部投稿应为 `external-claude-code`、`external-codex` 或 `external-manual`。
 
 ## PR 处理建议
 
@@ -24,6 +25,7 @@
 - 结构不标准：由内部整理人改成标准 Agent Skill 包。
 - 内容重复：关闭 PR，并在原 Issue 中贴出已有 skill 链接。
 - 内容明显无关或广告：关闭 PR，并给 Issue 加 `invalid` 标签。
+- 外部投稿来源不清：保持 Draft，回到原 Issue 要求补充，不因结构校验通过而直接合并。
 
 ## 合并前检查
 

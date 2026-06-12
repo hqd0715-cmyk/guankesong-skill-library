@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURES = ROOT / "tests" / "fixtures"
 INGEST_PATH = ROOT / "scripts" / "ingest_issue.py"
 VALIDATE_PATH = ROOT / "scripts" / "validate_skills.py"
 
@@ -21,117 +22,148 @@ ingest_issue = load_module("ingest_issue", INGEST_PATH)
 validate_skills = load_module("validate_skills", VALIDATE_PATH)
 
 
-class InternalProxySubmissionTest(unittest.TestCase):
-    def test_issue_fields_are_preserved_in_metadata(self):
-        body = """### Skill 标题
-活动复盘助手
+def fixture_fields(name):
+    body = (FIXTURES / name).read_text(encoding="utf-8")
+    return ingest_issue.parse_issue_form(body)
 
-### Skill 英文 ID
-event-retrospective
 
-### 分类
-AI + 专业方法论
-
-### 作者 / 公开署名
-莞客松围炉会共创
-
-### 原始提供者
-围炉会参与者
-
-### 素材来源
-2026 莞客松围炉会
-
-### 整理人
-莞客松整理组
-
-### GitHub 用户名
-_No response_
-
-### 标签
-活动复盘, 工作流
-
-### 难度
-beginner
-
-### 适用场景
-活动结束后整理复盘材料。
-
-### 使用步骤
-1. 汇总记录。
-2. 生成复盘。
-
-### Prompt 示例
-请根据以下记录生成活动复盘。
-
-### 注意事项
-删除个人隐私。
-
-### 案例
-围炉会活动复盘。
-
-### 公开状态
-已确认适合公开
-"""
-        fields = {
-            key: ingest_issue.clean_value(value)
-            for key, value in ingest_issue.parse_issue_form(body).items()
-        }
-        metadata = ingest_issue.metadata_json("event-retrospective", fields, "42")
+class IssueIngestionTest(unittest.TestCase):
+    def test_internal_proxy_fields_are_preserved(self):
+        fields = ingest_issue.validate_submission_fields(
+            fixture_fields("internal_proxy_issue.md")
+        )
+        metadata = ingest_issue.metadata_json(
+            "event-retrospective", fields, "42", "internal-maintainer"
+        )
 
         self.assertEqual(metadata["author"], "莞客松围炉会共创")
-        self.assertEqual(metadata["provider"], "围炉会参与者")
+        self.assertEqual(metadata["source_provider"], "围炉会参与者")
         self.assertEqual(metadata["source"], "2026 莞客松围炉会")
         self.assertEqual(metadata["curator"], "莞客松整理组")
-        self.assertEqual(metadata["publication_status"], "已确认适合公开")
-        self.assertEqual(metadata["submission_mode"], "internal-proxy")
+        self.assertEqual(metadata["github"], "internal-maintainer")
+        self.assertEqual(metadata["submission_type"], "internal-proxy")
         self.assertEqual(metadata["source_issue"], 42)
 
-    def test_internal_proxy_metadata_requires_provenance(self):
+    def test_external_claude_aliases_and_category_are_normalized(self):
+        fields = ingest_issue.validate_submission_fields(
+            fixture_fields("external_claude_issue.md")
+        )
+
+        self.assertEqual(fields["title"], "会议纪要行动项提取")
+        self.assertEqual(fields["name"], "meeting-action-items")
+        self.assertEqual(fields["category"], "AI + 专业方法论")
+        self.assertEqual(fields["submission_type"], "external-claude-code")
+        self.assertEqual(fields["prompt"], "请提取以下会议记录中的行动项。")
+
+    def test_external_codex_generates_stable_name_and_defaults(self):
+        fields = ingest_issue.validate_submission_fields(
+            fixture_fields("external_codex_issue.md")
+        )
+        name = ingest_issue.skill_name(
+            fields["title"], ingest_issue.split_tags(fields["tags"]), "88"
+        )
+
+        self.assertEqual(name, "community-triage-support")
+        self.assertEqual(fields["submission_type"], "external-codex")
+        self.assertEqual(fields["publication_status"], "需进一步核查")
+
+    def test_external_submission_records_issue_author_not_claimed_account(self):
+        fields = ingest_issue.validate_submission_fields(
+            fixture_fields("external_claude_issue.md")
+        )
+        fields["github"] = "someone-else"
+
+        metadata = ingest_issue.metadata_json(
+            "meeting-action-items", fields, "52", "actual-issue-author"
+        )
+
+        self.assertEqual(metadata["github"], "actual-issue-author")
+
+    def test_missing_core_fields_raise_clear_error(self):
+        with self.assertRaisesRegex(
+            ValueError, "缺少必填字段：作者 / 公开署名, 适用场景, 使用步骤"
+        ):
+            ingest_issue.validate_submission_fields(
+                {"title": "Incomplete", "category": "AI Shock"}
+            )
+
+    def test_invalid_explicit_name_is_not_silently_rewritten(self):
+        fields = fixture_fields("internal_proxy_issue.md")
+        fields["name"] = "Claude Skill"
+
+        with self.assertRaisesRegex(ValueError, "只能包含小写字母"):
+            ingest_issue.validate_submission_fields(fields)
+
+    def test_unknown_category_is_rejected(self):
+        fields = fixture_fields("internal_proxy_issue.md")
+        fields["category"] = "随便放一个分类"
+
+        with self.assertRaisesRegex(ValueError, "不支持的分类"):
+            ingest_issue.validate_submission_fields(fields)
+
+    def test_all_category_mappings_are_stable(self):
+        expected = {
+            "AI Shock": "ai-shock",
+            "AI + 专业方法论": "ai-professional",
+            "整活 Skill": "fun-skills",
+            "库维护工具": "library-tools",
+        }
+
+        for category, directory in expected.items():
+            normalized = ingest_issue.normalize_category(category)
+            self.assertEqual(ingest_issue.CATEGORY_DIRS[normalized], directory)
+
+    def test_existing_skill_is_not_overwritten_by_another_issue(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            skills_root = root / "skills"
-            skill_dir = skills_root / "ai-shock" / "missing-provenance"
-            skill_dir.mkdir(parents=True)
-            (skill_dir / "SKILL.md").write_text(
-                "---\n"
-                "name: missing-provenance\n"
-                'description: "Use when testing internal proxy submission metadata requirements."\n'
-                "---\n\n"
-                "# Missing Provenance\n",
-                encoding="utf-8",
+            fields = fixture_fields("internal_proxy_issue.md")
+            first = ingest_issue.write_skill_package(root, fields, "10")
+            second = ingest_issue.write_skill_package(root, fields, "11")
+
+            self.assertEqual(first.name, "event-retrospective")
+            self.assertEqual(second.name, "event-retrospective-issue-11")
+            first_metadata = json.loads(
+                (first / "skill.json").read_text(encoding="utf-8")
             )
-            (skill_dir / "skill.json").write_text(
-                json.dumps(
-                    {
-                        "name": "missing-provenance",
-                        "category": "AI Shock",
-                        "author": "莞客松团队",
-                        "tags": [],
-                        "platforms": ["codex"],
-                        "submission_mode": "internal-proxy",
-                    },
-                    ensure_ascii=False,
-                ),
-                encoding="utf-8",
+            second_metadata = json.loads(
+                (second / "skill.json").read_text(encoding="utf-8")
             )
+            self.assertEqual(first_metadata["source_issue"], 10)
+            self.assertEqual(second_metadata["source_issue"], 11)
 
-            errors = validate_skills.validate_skill(skill_dir, skills_root)
-
-        self.assertTrue(any("provider is required" in error for error in errors))
-        self.assertTrue(any("source is required" in error for error in errors))
-        self.assertTrue(any("curator is required" in error for error in errors))
-        self.assertTrue(any("publication_status is required" in error for error in errors))
-
-    def test_reviewed_proxy_submission_requires_publication_confirmation(self):
+    def test_same_issue_updates_its_draft_and_rebuilds_index(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            skills_root = root / "skills"
+            fields = fixture_fields("external_claude_issue.md")
+            first = ingest_issue.write_skill_package(
+                root, fields, "51", "outside-user"
+            )
+            fields["author"] = "Updated Contributor"
+            second = ingest_issue.write_skill_package(
+                root, fields, "51", "outside-user"
+            )
+            ingest_issue.rebuild_index(root)
+
+            self.assertEqual(first, second)
+            metadata = json.loads(
+                (second / "skill.json").read_text(encoding="utf-8")
+            )
+            index = json.loads(
+                (root / "index" / "skills.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(metadata["author"], "Updated Contributor")
+            self.assertEqual(metadata["github"], "outside-user")
+            self.assertEqual(index[0]["name"], "meeting-action-items")
+
+    def test_reviewed_submission_requires_publication_confirmation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skills_root = Path(tmp) / "skills"
             skill_dir = skills_root / "ai-shock" / "pending-publication"
             skill_dir.mkdir(parents=True)
             (skill_dir / "SKILL.md").write_text(
                 "---\n"
                 "name: pending-publication\n"
-                'description: "Use when testing publication review requirements for proxy submissions."\n'
+                'description: "Use when testing publication review requirements."\n'
                 "---\n\n"
                 "# Pending Publication\n",
                 encoding="utf-8",
@@ -141,15 +173,12 @@ beginner
                     {
                         "name": "pending-publication",
                         "category": "AI Shock",
-                        "author": "莞客松团队",
-                        "provider": "活动参与者",
-                        "source": "莞客松活动",
-                        "curator": "莞客松整理组",
+                        "author": "Contributor",
                         "tags": [],
                         "status": "reviewed",
                         "platforms": ["codex"],
                         "publication_status": "需进一步核查",
-                        "submission_mode": "internal-proxy",
+                        "submission_type": "external-codex",
                     },
                     ensure_ascii=False,
                 ),

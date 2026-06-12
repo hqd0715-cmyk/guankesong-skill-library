@@ -1,5 +1,5 @@
 name: 内部 Skill 代投稿
-description: 供莞客松内部成员把已整理素材代为录入，系统会自动生成 Draft PR。
+description: 供莞客松内部成员录入已筛选、整理并完成来源核查的素材。
 title: "[Skill] "
 labels:
   - skill-submission
@@ -7,14 +7,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        此表单仅供莞客松内部成员代投稿。外部素材请先进入团队统一收集表，由整理人完成筛选、去重、改写和公开风险检查后再录入。
-
-        自动化只处理拥有仓库 write、maintain 或 admin 权限的提交者。
+        此入口供拥有仓库写入权限的莞客松内部成员使用。提交后，GitHub Actions 会生成或更新对应的 Draft PR，仍需维护者检查内容、来源和公开风险后才能合并。
   - type: input
     id: skill_title
     attributes:
       label: Skill 标题
-      description: 例如：用 AI 快速生成活动复盘
       placeholder: 用 AI 快速生成活动复盘
     validations:
       required: true
@@ -22,10 +19,8 @@ body:
     id: skill_name
     attributes:
       label: Skill 英文 ID
-      description: 可选。用小写字母、数字和连字符，例如：event-retrospective。不要包含 anthropic 或 claude。留空时系统会根据标题和标签生成。
+      description: 可选。仅使用小写字母、数字和连字符，且不要包含 anthropic 或 claude。
       placeholder: event-retrospective
-    validations:
-      required: false
   - type: dropdown
     id: category
     attributes:
@@ -40,12 +35,11 @@ body:
     id: author
     attributes:
       label: 作者 / 公开署名
-      description: 填最终展示在 Skill 中的作者或共创署名。
       placeholder: 张三 / 莞客松围炉会共创 / 莞客松团队
     validations:
       required: true
   - type: input
-    id: provider
+    id: source_provider
     attributes:
       label: 原始提供者
       description: 原始素材由谁提供；与公开署名相同也请填写。
@@ -56,15 +50,14 @@ body:
     id: source
     attributes:
       label: 素材来源
-      description: 例如活动、围炉会、内部项目、访谈或公开资料；公开资料请附链接或出处。
-      placeholder: 2026 莞客松围炉会 / 内部项目复盘 / 公开资料：https://...
+      description: 公开资料请附链接或明确出处。
+      placeholder: 2026 莞客松围炉会 / 内部项目复盘 / https://...
     validations:
       required: true
   - type: input
     id: curator
     attributes:
       label: 整理人
-      description: 负责筛选、改写和标准化该 Skill 的莞客松内部成员。
       placeholder: 莞客松整理组 / 李四
     validations:
       required: true
@@ -74,16 +67,12 @@ body:
       label: GitHub 用户名
       description: 原始作者有可确认账号时填写；不要默认填写代投稿人的账号。
       placeholder: hqd0715
-    validations:
-      required: false
   - type: input
     id: tags
     attributes:
       label: 标签
-      description: 用逗号分隔，例如：活动复盘, ChatGPT, 效率工具
-      placeholder: 活动复盘, ChatGPT, 效率工具
-    validations:
-      required: true
+      description: 用逗号分隔。
+      placeholder: 活动复盘, 工作流
   - type: dropdown
     id: difficulty
     attributes:
@@ -98,42 +87,41 @@ body:
     id: scenario
     attributes:
       label: 适用场景
-      description: 写清楚什么时候适合使用这个 Skill。
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
       label: 使用步骤
-      description: 建议用有序列表写出操作步骤。
+      description: 建议使用有序列表。
     validations:
       required: true
   - type: textarea
     id: prompt
     attributes:
       label: Prompt 示例
-      render: markdown
-    validations:
-      required: true
   - type: textarea
     id: notes
     attributes:
       label: 注意事项
-    validations:
-      required: false
   - type: textarea
     id: example
     attributes:
       label: 案例
-    validations:
-      required: false
   - type: dropdown
     id: publication_status
     attributes:
       label: 公开状态
-      description: 确认内容是否完成隐私、版权、安全和公开风险检查。
       options:
         - 已确认适合公开
         - 需进一步核查
+    validations:
+      required: true
+  - type: dropdown
+    id: submission_type
+    attributes:
+      label: 投稿方式
+      options:
+        - internal-proxy
     validations:
       required: true

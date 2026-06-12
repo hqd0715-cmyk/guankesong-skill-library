@@ -3,7 +3,7 @@
   "title": "Skill 标题",
   "category": "AI Shock",
   "author": "",
-  "provider": "",
+  "source_provider": "",
   "source": "",
   "curator": "",
   "github": "",
@@ -17,5 +17,5 @@
     "claude-code"
   ],
   "publication_status": "",
-  "submission_mode": "internal-proxy"
+  "submission_type": "internal-proxy"
 }

@@ -1,0 +1,120 @@
+name: 外部 Agent 投稿
+description: 供外部贡献者通过 Claude Code、Codex 或 GitHub CLI 提交标准化 Issue。
+title: "[Skill] "
+labels:
+  - skill-submission
+body:
+  - type: markdown
+    attributes:
+      value: |
+        外部投稿只需要创建 Issue，不需要 fork、clone、push 或直接创建 Pull Request。系统会从 Issue 生成 Draft PR，最终是否收录由莞客松维护者审核决定。
+  - type: input
+    id: skill_title
+    attributes:
+      label: Skill 标题
+      placeholder: 用 AI 快速生成活动复盘
+    validations:
+      required: true
+  - type: input
+    id: skill_name
+    attributes:
+      label: Skill 英文 ID
+      description: 可选。仅使用小写字母、数字和连字符，且不要包含 anthropic 或 claude。
+      placeholder: event-retrospective
+  - type: dropdown
+    id: category
+    attributes:
+      label: 分类
+      options:
+        - AI Shock
+        - AI + 专业方法论
+        - 整活 Skill
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: 作者 / 公开署名
+      placeholder: 你的名字、昵称或组织名
+    validations:
+      required: true
+  - type: input
+    id: source_provider
+    attributes:
+      label: 原始提供者
+      description: 如果内容由你原创，可填写“同作者”。
+  - type: input
+    id: source
+    attributes:
+      label: 素材来源
+      description: 原创请注明“原创”；引用公开资料请附链接或出处。
+  - type: input
+    id: curator
+    attributes:
+      label: 整理人
+      description: 可填写你本人、协助整理的 Agent，或留空等待维护者补充。
+  - type: input
+    id: github
+    attributes:
+      label: GitHub 用户名
+      description: 留空时系统会使用 Issue 作者账号。
+  - type: input
+    id: tags
+    attributes:
+      label: 标签
+      description: 用逗号分隔。
+      placeholder: 活动复盘, 工作流
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: 难度
+      options:
+        - beginner
+        - intermediate
+        - advanced
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 适用场景
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 使用步骤
+      description: 建议使用有序列表。
+    validations:
+      required: true
+  - type: textarea
+    id: prompt
+    attributes:
+      label: Prompt 示例
+  - type: textarea
+    id: notes
+    attributes:
+      label: 注意事项
+  - type: textarea
+    id: example
+    attributes:
+      label: 案例
+  - type: dropdown
+    id: publication_status
+    attributes:
+      label: 公开状态
+      options:
+        - 已确认适合公开
+        - 需进一步核查
+    validations:
+      required: true
+  - type: dropdown
+    id: submission_type
+    attributes:
+      label: 投稿方式
+      options:
+        - external-claude-code
+        - external-codex
+        - external-manual
+    validations:
+      required: true
