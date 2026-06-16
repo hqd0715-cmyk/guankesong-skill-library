@@ -39,7 +39,7 @@
       "community-operations"
     ],
     "difficulty": "intermediate",
-    "status": "draft",
+    "status": "reviewed",
     "platforms": [
       "codex",
       "claude-code"

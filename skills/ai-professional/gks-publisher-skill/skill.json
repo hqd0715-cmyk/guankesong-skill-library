@@ -17,7 +17,7 @@
     "xiaohongshu",
     "community-operations"
   ],
-  "status": "draft",
+  "status": "reviewed",
   "created": "2026-06-16",
   "updated": "2026-06-16",
   "difficulty": "intermediate",
@@ -25,7 +25,7 @@
     "codex",
     "claude-code"
   ],
-  "publication_status": "需进一步核查",
+  "publication_status": "已确认适合公开",
   "submission_type": "external-claude-code",
   "source_issue": 24
 }
