@@ -1,0 +1,31 @@
+{
+  "name": "gks-publisher-skill",
+  "title": "莞客松推文自动化发布",
+  "category": "AI + 专业方法论",
+  "author": "莞客松团队",
+  "source_provider": "需进一步核查",
+  "source": "莞客松内部内容生产需求 + 微信公众号/小红书/社群运营实际发布流程",
+  "curator": "Kai (skyli9520666)",
+  "github": "skyli9520666",
+  "tags": [
+    "wechat",
+    "content-production",
+    "agent-skill",
+    "chinese-text",
+    "ai-workflow",
+    "publishing",
+    "xiaohongshu",
+    "community-operations"
+  ],
+  "status": "draft",
+  "created": "2026-06-16",
+  "updated": "2026-06-16",
+  "difficulty": "intermediate",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "publication_status": "需进一步核查",
+  "submission_type": "external-claude-code",
+  "source_issue": 24
+}

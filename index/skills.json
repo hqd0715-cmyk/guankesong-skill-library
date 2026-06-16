@@ -22,6 +22,32 @@
     "metadata_path": "skills/ai-professional/adversarial-review/skill.json"
   },
   {
+    "name": "gks-publisher-skill",
+    "title": "莞客松推文自动化发布",
+    "description": "莞客松推文自动化发布。用于面向需要为微信公众号文章、小红书笔记、社群运营消息、学院官号推文、活动邀约/复盘、团队叙事等多渠道批量生成中文内容的团队。特别适合已有基础 AI 工具使用经验的内容运营人员、社区运营者和技术传播者。 Skill 通过「Agent 对话式采访。关键词：wechat, content-production, agent-skill, chinese-text, ai-workflow。Use when the user asks for this workflow, prompt pattern, or reusable AI skill.",
+    "category": "AI + 专业方法论",
+    "author": "莞客松团队",
+    "github": "skyli9520666",
+    "tags": [
+      "wechat",
+      "content-production",
+      "agent-skill",
+      "chinese-text",
+      "ai-workflow",
+      "publishing",
+      "xiaohongshu",
+      "community-operations"
+    ],
+    "difficulty": "intermediate",
+    "status": "draft",
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/ai-professional/gks-publisher-skill/SKILL.md",
+    "metadata_path": "skills/ai-professional/gks-publisher-skill/skill.json"
+  },
+  {
     "name": "macro-chain-review",
     "title": "宏观调用链追踪",
     "description": "用于长期多步骤任务中，需要对单条关键调用链进行深度稳定性追踪时使用。当任务跨越多个会话、需要 agent 接手上一轮调查、或需要维护调用链状态机和任务队列时触发。核心场景：多轮 agent 派发中保持注意力连续性、每轮只推进一个明确调查任务、后续 agent 不重新泛泛搜索而是从状态机接手。",
