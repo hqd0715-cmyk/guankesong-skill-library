@@ -271,7 +271,7 @@ def metadata_json(
         "curator": clean_value(fields.get("curator", "")),
         "github": github,
         "tags": split_tags(clean_value(fields.get("tags", ""))),
-        "status": "draft",
+        "status": "reviewed",
         "created": today,
         "updated": today,
         "difficulty": clean_value(fields.get("difficulty", "beginner")) or "beginner",
