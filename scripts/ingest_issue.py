@@ -334,7 +334,6 @@ def unique_target(
     if (
         issue_number
         and str(metadata.get("source_issue", "")) == str(issue_number)
-        and metadata.get("status", "draft") == "draft"
     ):
         return skill_id, target
 
