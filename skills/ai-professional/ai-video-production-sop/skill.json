@@ -1,0 +1,31 @@
+{
+  "name": "ai-video-production-sop",
+  "title": "AI影像制作标准作业流程(SOP)",
+  "category": "AI + 专业方法论",
+  "author": "莞客松 / skyli9520666",
+  "source_provider": "同作者",
+  "source": "原创,基于莞客松第二期围炉会分享内容整理。GitHub 仓库:https://github.com/skyli9520666/AI-SOP",
+  "curator": "skyli9520666,Claude Code 协助整理为 Skill 格式",
+  "github": "skyli9520666",
+  "tags": [
+    "AI视频",
+    "AI短剧",
+    "工作流",
+    "SOP",
+    "影视制作",
+    "提示词工程",
+    "模板",
+    "AI影像"
+  ],
+  "status": "reviewed",
+  "created": "2026-06-26",
+  "updated": "2026-06-26",
+  "difficulty": "intermediate",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "publication_status": "已确认适合公开",
+  "submission_type": "external-claude-code",
+  "source_issue": 27
+}
