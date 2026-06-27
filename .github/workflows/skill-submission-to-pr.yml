@@ -107,7 +107,67 @@ jobs:
               ;;
           esac
 
+      - name: Check for already merged submission
+        id: merged_submission
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          branch="skill-submission/issue-${ISSUE_NUMBER}"
+          merged_number="$(
+            gh search prs \
+              --repo "$GITHUB_REPOSITORY" \
+              --merged \
+              --head "$branch" \
+              --json number \
+              --jq '.[0].number // ""'
+          )"
+          if [ -z "$merged_number" ]; then
+            echo "already_merged=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "already_merged=true" >> "$GITHUB_OUTPUT"
+          merged_url="$(
+            gh pr view "$merged_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json url \
+              --jq '.url'
+          )"
+          marker="<!-- skill-submission-pr:${ISSUE_NUMBER} -->"
+          comment_body="$(cat <<EOF
+          ${marker}
+          已合并入库投稿 PR：#${merged_number}
+
+          当前状态：已合并到 main。GitHub Pages 部署完成后，可在共创库页面检索。
+          重新运行投稿工作流不会再为同一 Issue 创建重复 PR。
+
+          PR 链接：${merged_url}
+          EOF
+          )"
+          comment_id="$(
+            gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" \
+              --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | contains(\"${marker}\"))) | .id" \
+              | head -n 1
+          )"
+          if [ -n "$comment_id" ]; then
+            gh api \
+              --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+              -f body="$comment_body" \
+              >/dev/null
+          else
+            gh issue comment "$ISSUE_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "$comment_body"
+          fi
+
       - name: Generate skill package
+        if: steps.merged_submission.outputs.already_merged != 'true'
         env:
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
           ISSUE_AUTHOR: ${{ steps.issue.outputs.author }}
@@ -119,14 +179,17 @@ jobs:
             --issue-body-file issue-body.md
 
       - name: Validate skill packages
+        if: steps.merged_submission.outputs.already_merged != 'true'
         run: python scripts/validate_skills.py
 
       - name: Show generated changes
+        if: steps.merged_submission.outputs.already_merged != 'true'
         run: |
           git status --short
           git diff --stat
 
       - name: Commit and push skill branch
+        if: steps.merged_submission.outputs.already_merged != 'true'
         id: skill_branch
         env:
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
@@ -155,7 +218,7 @@ jobs:
           git ls-remote --heads origin "$branch"
 
       - name: Create or update draft PR
-        if: steps.skill_branch.outputs.has_changes == 'true'
+        if: steps.merged_submission.outputs.already_merged != 'true' && steps.skill_branch.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.skill_branch.outputs.branch }}
