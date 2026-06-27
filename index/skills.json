@@ -22,6 +22,32 @@
     "metadata_path": "skills/ai-professional/adversarial-review/skill.json"
   },
   {
+    "name": "ai-video-production-sop",
+    "title": "AI影像制作标准作业流程(SOP)",
+    "description": "AI影像制作标准作业流程(SOP)。用于- 想尝试 AI 短剧、AI 短片、AI MV、活动宣传片或概念预告,但不知道从哪一步开始的内容创作者 - 已使用即梦/Seedance、可灵、Runway、Pika 等视频生成工具,但产出质量不稳定、画面不可控的用户 - 为黑客松、创意比。关键词：AI视频, AI短剧, 工作流, SOP, 影视制作。Use when the user asks for this workflow, prompt pattern, or reusable AI skill.",
+    "category": "AI + 专业方法论",
+    "author": "莞客松 / skyli9520666",
+    "github": "skyli9520666",
+    "tags": [
+      "AI视频",
+      "AI短剧",
+      "工作流",
+      "SOP",
+      "影视制作",
+      "提示词工程",
+      "模板",
+      "AI影像"
+    ],
+    "difficulty": "intermediate",
+    "status": "reviewed",
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/ai-professional/ai-video-production-sop/SKILL.md",
+    "metadata_path": "skills/ai-professional/ai-video-production-sop/skill.json"
+  },
+  {
     "name": "gks-publisher-skill",
     "title": "莞客松推文自动化发布",
     "description": "莞客松推文自动化发布。用于面向需要为微信公众号文章、小红书笔记、社群运营消息、学院官号推文、活动邀约/复盘、团队叙事等多渠道批量生成中文内容的团队。特别适合已有基础 AI 工具使用经验的内容运营人员、社区运营者和技术传播者。 Skill 通过「Agent 对话式采访。关键词：wechat, content-production, agent-skill, chinese-text, ai-workflow。Use when the user asks for this workflow, prompt pattern, or reusable AI skill.",
