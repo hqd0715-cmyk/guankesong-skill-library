@@ -166,12 +166,30 @@ jobs:
         run: |
           set -euo pipefail
 
-          title="Skill 投稿 #${ISSUE_NUMBER} (${SUBMISSION_TYPE})"
-          body="This draft PR was generated from issue #${ISSUE_NUMBER}.
+          skill_title="$(
+            python scripts/ingest_issue.py \
+              --issue-title-file issue-title.txt \
+              --issue-body-file issue-body.md \
+              --print-field title
+          )"
+          if [ -z "$skill_title" ]; then
+            skill_title="$(sed -E 's/^\[Skill\][[:space:]]*//' issue-title.txt | head -n 1)"
+          fi
+
+          title="Skill 投稿 #${ISSUE_NUMBER}：${skill_title} (${SUBMISSION_TYPE})"
+          body="$(cat <<EOF
+          This PR was generated from issue #${ISSUE_NUMBER}.
+
+          Closes #${ISSUE_NUMBER}
 
           Submission type: \`${SUBMISSION_TYPE}\`
 
-          Maintainers must verify Agent Skill structure, Codex/Claude Code compatibility, attribution, source, publication status, classification, quality, originality, and formatting before marking it ready."
+          Status:
+          - Issue accepted and skill package generated.
+          - Maintainers must review Agent Skill structure, Codex/Claude Code compatibility, attribution, source, publication status, classification, quality, originality, and formatting.
+          - The skill appears in the public catalog only after this PR is merged into \`main\` and GitHub Pages deploys.
+          EOF
+          )"
 
           existing_number="$(
             gh pr list \
@@ -188,14 +206,52 @@ jobs:
               -f title="$title" \
               -f body="$body" \
               >/dev/null
+            pr_number="$existing_number"
+            pr_url="$(
+              gh pr view "$pr_number" \
+                --repo "$GITHUB_REPOSITORY" \
+                --json url \
+                --jq '.url'
+            )"
             echo "Updated Draft PR #${existing_number}"
           else
-            gh pr create \
+            pr_url="$(
+              gh pr create \
               --draft \
               --base main \
               --head "${REPOSITORY_OWNER}:${BRANCH}" \
               --title "$title" \
               --body "$body"
+            )"
+            pr_number="${pr_url##*/}"
+          fi
+
+          marker="<!-- skill-submission-pr:${ISSUE_NUMBER} -->"
+          comment_body="$(cat <<EOF
+          ${marker}
+          已生成/更新投稿 PR：#${pr_number}
+
+          当前状态：等待维护者审核与合并。
+          合并后才会进入共创库页面；只创建 Issue 不代表已经入库。
+
+          PR 链接：${pr_url}
+          EOF
+          )"
+          comment_id="$(
+            gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" \
+              --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | contains(\"${marker}\"))) | .id" \
+              | head -n 1
+          )"
+          if [ -n "$comment_id" ]; then
+            gh api \
+              --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+              -f body="$comment_body" \
+              >/dev/null
+          else
+            gh issue comment "$ISSUE_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "$comment_body"
           fi
 
           # Pull requests created with GITHUB_TOKEN do not emit a pull_request

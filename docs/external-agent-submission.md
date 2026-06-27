@@ -10,7 +10,7 @@
 - 不直接创建 Pull Request。
 - 不需要仓库写权限。
 
-GitHub Actions 会把合格 Issue 转换为 Draft PR，莞客松维护者负责审核、修改和决定是否合并。
+GitHub Actions 会把合格 Issue 转换为投稿 PR，并在原 Issue 下评论 PR 链接。莞客松维护者负责审核、修改和决定是否合并；只有 PR 合并后，Skill 才会进入共创库页面。
 
 ## 投稿前准备
 
@@ -140,11 +140,13 @@ gh issue create \
 
 1. `Skill submission to PR` 工作流解析 Issue。
 2. 系统创建或更新 `skill-submission/issue-<编号>` 分支。
-3. 系统创建 Draft PR，并显式触发仓库校验。
-4. 维护者检查内容、来源、公开风险、重复度和兼容性。
-5. 维护者可要求补充、修改后合并，或关闭不合适的投稿。
+3. 系统创建或更新投稿 PR，并在原 Issue 下评论 PR 链接。
+4. 系统显式触发仓库校验。
+5. 维护者检查内容、来源、公开风险、重复度和兼容性。
+6. 维护者可要求补充、修改后合并，或关闭不合适的投稿。
+7. PR 合并到 `main` 且 GitHub Pages 部署完成后，Skill 才会出现在共创库页面。
 
-编辑原 Issue 会重新生成同一分支并更新原 Draft PR，不会重复创建 PR。
+编辑原 Issue 会重新生成同一分支并更新原投稿 PR，不会重复创建 PR。Issue 创建成功不等于已经入库；请以 Issue 下的 PR 链接和 PR 合并状态为准。
 
 ## 常见问题
 
@@ -153,3 +155,4 @@ gh issue create \
 - 英文 ID 失败：只使用小写字母、数字和连字符，不包含 `anthropic` 或 `claude`。
 - 分类失败：使用 `AI Shock`、`AI + 专业方法论` 或 `整活 Skill`。
 - CI 通过但未合并：CI 只验证结构，是否收录仍由维护者决定。
+- 共创库页面搜不到：先确认对应 PR 已合并到 `main`，再检查 Pages 部署状态。

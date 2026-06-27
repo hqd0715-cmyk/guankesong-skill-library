@@ -28,7 +28,7 @@
 外部贡献 → 标准化外部投稿 Issue ─────────┘
 ```
 
-所有自动生成的 Pull Request 都是 Draft，不会自动合并。
+自动生成的 Pull Request 默认进入人工审核流程，不会自动合并。Issue 创建成功只代表进入投稿队列；只有 PR 合并到 `main` 并完成 GitHub Pages 部署后，Skill 才会进入共创库页面。
 
 ## 2. 外部成员操作
 
@@ -94,7 +94,7 @@
 - `external-claude-code`
 - `external-manual`
 
-提交后，系统会创建 `skill-submission/issue-<编号>` 分支和 Draft PR。维护者可能要求补充来源、步骤、案例或公开授权；CI 通过不代表一定收录。
+提交后，系统会创建 `skill-submission/issue-<编号>` 分支和投稿 PR，并在原 Issue 下评论 PR 链接。维护者可能要求补充来源、步骤、案例或公开授权；CI 通过不代表一定收录。
 
 完整字段模板和 Agent 提示词见 [外部 Agent 投稿指南](external-agent-submission.md)。
 
@@ -121,7 +121,7 @@
 2. 填写原始提供者、素材来源、整理人、适用场景、步骤、Prompt、案例和公开状态。
 3. `投稿方式` 选择 `internal-proxy`。
 4. 提交后打开 Issue 时间线或 `Actions`，确认 `Skill submission to PR` 已运行。
-5. 打开自动生成的 Draft PR，检查 `SKILL.md`、`skill.json` 和 `index/skills.json`。
+5. 从 Issue 里的机器人评论打开自动生成的投稿 PR，检查 `SKILL.md`、`skill.json` 和 `index/skills.json`。
 6. 按第 3.4 节完成审核和发布。
 
 自动化会核验 Issue 作者权限。无写权限账号不能冒用 `internal-proxy`。
@@ -159,7 +159,7 @@ python skills/library-tools/submit-skills/scripts/submit_skills.py \
 
 ### 3.4 审核、合并与发布
 
-维护者审核内部或外部投稿生成的 Draft PR：
+维护者审核内部或外部投稿生成的投稿 PR：
 
 1. 检查目录为 `skills/<category>/<skill-name>/`。
 2. 检查 `SKILL.md` frontmatter 只包含 `name` 和 `description`。
@@ -169,7 +169,7 @@ python skills/library-tools/submit-skills/scripts/submit_skills.py \
 6. 正式发布前将 `skill.json.status` 改为 `reviewed`。
 7. 刷新索引并运行本地校验。
 8. 等待 `Validate repository / validate` 通过。
-9. 将 Draft PR 标记为 Ready for review，然后合并到 `main`。
+9. 如 PR 仍为 Draft，先标记为 Ready for review，然后合并到 `main`。
 10. 等待 GitHub Pages 部署，搜索新 Skill 并测试目录与复制按钮。
 
 本地合并前检查：
@@ -211,7 +211,7 @@ git diff --exit-code index/skills.json
 | 分类失败 | 是否使用仓库支持的分类名称 | 改为 `AI Shock`、`AI + 专业方法论` 或 `整活 Skill` |
 | 首次外部投稿等待审批 | GitHub 首次贡献者安全机制 | 维护者核查 Issue 后批准 workflow |
 | CI 通过但不能合并 | PR 仍是 Draft、分支规则或内容审核未完成 | 标记 Ready，检查规则和审核项 |
-| Pages 搜不到新 Skill | 状态仍为 `draft`、部署未完成或索引未刷新 | 改为 `reviewed`，检查 Actions 和索引 |
+| Pages 搜不到新 Skill | PR 未合并、状态仍为 `draft`、部署未完成或索引未刷新 | 先确认 PR 已合并，再检查 `reviewed`、Actions 和索引 |
 | 同名 Skill 冲突 | 已存在相同英文 ID | 人工判断合并、改名或关闭重复投稿 |
 
 编辑原 Issue 时，系统应更新同一分支和同一 Draft PR，不应重复创建 PR。
@@ -228,7 +228,7 @@ git diff --exit-code index/skills.json
 
 - Issue 创建成功。
 - Action 自动运行或已获维护者批准。
-- Draft PR 已生成。
+- 投稿 PR 已生成，且 Issue 下能看到 PR 链接评论。
 - 维护者已给出收录、补充或关闭结论。
 
 ### 内部发布完成
