@@ -214,7 +214,7 @@ git diff --exit-code index/skills.json
 | Pages 搜不到新 Skill | PR 未合并、状态仍为 `draft`、部署未完成或索引未刷新 | 先确认 PR 已合并，再检查 `reviewed`、Actions 和索引 |
 | 同名 Skill 冲突 | 已存在相同英文 ID | 人工判断合并、改名或关闭重复投稿 |
 
-编辑原 Issue 时，系统应更新同一分支和同一 Draft PR，不应重复创建 PR。
+编辑原 Issue 时，系统应更新同一分支和同一投稿 PR，不应重复创建 PR。若该 Issue 对应投稿 PR 已经合并，重新运行工作流只更新 Issue 状态评论，不再创建重复 PR。
 
 ## 6. 完成标准
 
