@@ -1,0 +1,26 @@
+{
+  "name": "codex-external-flow-test",
+  "title": "Codex 外部投稿流程验证",
+  "category": "AI Shock",
+  "author": "外部测试者",
+  "source_provider": "Codex 测试账号",
+  "source": "外部成员通过 Codex 创建 GitHub Issue 的投稿流程测试",
+  "curator": "外部测试者",
+  "github": "hqd0715-cmyk",
+  "tags": [
+    "Codex",
+    "外部投稿",
+    "自动化测试"
+  ],
+  "status": "draft",
+  "created": "2026-06-12",
+  "updated": "2026-06-12",
+  "difficulty": "beginner",
+  "platforms": [
+    "codex",
+    "claude-code"
+  ],
+  "publication_status": "已确认适合公开",
+  "submission_type": "external-codex",
+  "source_issue": 17
+}

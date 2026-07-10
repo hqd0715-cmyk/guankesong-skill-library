@@ -96,6 +96,27 @@
     "metadata_path": "skills/ai-professional/macro-chain-review/skill.json"
   },
   {
+    "name": "codex-external-flow-test",
+    "title": "Codex 外部投稿流程验证",
+    "description": "Codex 外部投稿流程验证。用于用于验证无仓库写权限的外部成员能否通过 Codex 创建标准 Skill 投稿 Issue,并触发仓库自动生成 Draft PR。。关键词：Codex, 外部投稿, 自动化测试。Use when the user asks for this workflow, prompt pattern, or reusable AI skill.",
+    "category": "AI Shock",
+    "author": "外部测试者",
+    "github": "hqd0715-cmyk",
+    "tags": [
+      "Codex",
+      "外部投稿",
+      "自动化测试"
+    ],
+    "difficulty": "beginner",
+    "status": "draft",
+    "platforms": [
+      "codex",
+      "claude-code"
+    ],
+    "path": "skills/ai-shock/codex-external-flow-test/SKILL.md",
+    "metadata_path": "skills/ai-shock/codex-external-flow-test/skill.json"
+  },
+  {
     "name": "government-institution-text-polish",
     "title": "机构介绍的文本润色",
     "description": "机构介绍、单位简介、部门职能、公文类文本润色工作流。Use when the user asks to rewrite Chinese institutional, government, public-sector, or official-document copy so it sounds precise, grounded, and less AI-generated.",
